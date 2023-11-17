@@ -150,7 +150,8 @@
       Multi-Agent Reinforcement Learning (MARL) is an area of machine learning where multiple agents learn to make
       decisions in a shared environment. Unlike traditional reinforcement learning which focuses on a single agent, MARL
       involves multiple, simultaneously operating agents, each learning from their own experiences and the collective
-      experiences of others. These agents can be cooperative, competitive, or both.
+      experiences of others. These agents can be cooperative, competitive, or both. The environments in JaxMARL span 
+      cooperative, competitive and mixed games, discrete and continuous state and action spaces, and zero-shot and CTDE settings.
     </p>
 
     <h3>Pure JAX</h3>
@@ -188,7 +189,7 @@
     <div class="centered-content-container">
       <figure>
         <img id="environments" src="dist/img/speeds.png" />
-        <figcaption style="text-align: center;">Table 1:Benchmark results for JAX-based MARL environments
+        <figcaption style="text-align: center;">Table 1: Benchmark results for JAX-based MARL environments
           (steps-per-second) when taking random actions on an A100. All environments are significantly faster than
           existing CPU implementations.</figcaption>
       </figure>
@@ -203,8 +204,24 @@
     </p>
     <p><b><em>STORM</em></b></p>
     <details>
-      <p>
+      <p>Spatial-Temporal Representations of Matrix Games (STORM) is inspired by the 
+        "in the Matrix" games in Melting Pot 2.0. The STORM environment expands on matrix games 
+        by representing them as grid-world scenarios. Agents collect resources which define their 
+        strategy during interactions and are rewarded based on a pre-specified payoff matrix.</p> 
 
+        <p>This allows for the embedding of fully cooperative, competitive or general-sum games, 
+        such as the prisoner's dilemma.
+
+        Thus, STORM can be used for studying paradigms such as <em>opponent shaping</em>, where 
+        agents act with the intent to change other agents' learning dynamics, which has been 
+        empirically shown to lead to more prosocial outcomes.</p>
+
+        <p>Compared to the Coin Game or matrix games, the grid-world setting presents a variety 
+        of new challenges such as partial observability, multi-step agent interactions, 
+        temporally-extended actions, and longer time horizons.
+        
+        Unlike the "in the Matrix" games from Melting Pot, STORM features stochasticity, 
+        increasing the difficulty. 
       </p>
     </details>
 
@@ -356,7 +373,7 @@
         </table>
 
       </div>
-      <figcaption style="text-align: center;">Table 1: Units and start positions of
+      <figcaption style="text-align: center;">Table 2: Units and start positions of
         different SMAX scenarios</figcaption>
     </details>
 
@@ -380,7 +397,8 @@
           <img src="dist/img/mpe_spread_rew.jpg" alt="Spread-Seconds" style="width:100.0%">
         </div>
       </div>
-      <figcaption style="text-align: center;">Figure 5: </figcaption>
+      <figcaption style="text-align: center;">Figure 5: Training Return for MPE Simple Spread for 
+      SMAX and MARLLIB against timesteps (left) and seconds in wall clock time (right)</figcaption>
     </figure>
 
     <p>
@@ -397,7 +415,9 @@
           <img src="dist/img/smax_times_9_training.jpg" alt="SMAX-Vector" style="width:100.0%">
         </div>
       </div>
-      <figcaption style="text-align: center;">Figure 6: </figcaption>
+      <figcaption style="text-align: center;">Figure 6: Plot of the time to train different nummbers of
+      teams of agents for SMAX and MPE Simple Spread v3. By using JAX's `vmap` feature, training 
+      scales well in the number of agents.</figcaption>
     </figure>
 
     <p>
@@ -419,7 +439,8 @@
           <img src="dist/img/qmix_batch_speed.jpg" alt="QMIX-Speed" style="width:100.0%">
         </div>
       </div>
-      <figcaption style="text-align: center;">Figure 7: </figcaption>
+      <figcaption style="text-align: center;">Figure 7: Training performance on MPE Simple Spread v3 for  
+      PyMARL and JaxMARL (left) and the time to train different numbers of teams of agents (right). </figcaption>
     </figure>
 
 
