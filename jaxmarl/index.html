@@ -1,0 +1,501 @@
+<!--
+  Copyright 2018 The Distill Template Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!doctype html>
+
+<head>
+  <title>JaxMARL: Multi-Agent RL, but 10000x Faster</title>
+  <meta name="description" content="Web publication for &quot;JaxMARL: Multi-Agent RL Environments in JAX&quot;." />
+  <!-- TODO: Need to add urls to images for metadata -->
+  <meta property="og:url" content="https://arxiv.org/abs/2311.10090" />
+  <meta property="og:title" content="JaxMARL: Multi-Agent RL environments in JAX" />
+  <meta property="og:description" content="Web publication for &quot;JaxMARL&quot;" />
+  <meta property="og:image" content="og-image.png" />
+  <meta property="og:image:url" content="og-image.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="JaxMARL" />
+  <meta name="twitter:description" content="Web publication for &quot;JaxMARL&quot;." />
+  <meta name="twitter:image" content="" />
+  <meta name="twitter:image:secure_url" content="" />
+
+  <script>
+    console.log = function () { };
+    console.groupCollapsed = function () { };
+    console.debug = function () { };
+  </script>
+  <script src="dist/template.v2.js"></script>
+  <link rel="stylesheet" href="dist/bootstrap.forms.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+    crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+
+  <!-- Uncomment imports below if you want to run TF.js models in browser -->
+  <!-- <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script> -->
+  <script defer src="https://cdn.jsdelivr.net/npm/p5@1.2.0/lib/p5.js"></script>
+  <script src=https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js></script>
+
+  <link rel="stylesheet" href="dist/demo.css">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf8">
+  <style>
+    /* Three image containers (use 25% for four, and 50% for two, etc) */
+    .column {
+      float: left;
+      width: 33.33%;
+      /* padding: 5px; */
+    }
+
+    /* Clear floats after image containers */
+    .row::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+
+    .gist-data {
+      max-height: 450px;
+      overflow-y: visible;
+    }
+
+    a {
+      display: inline;
+      text-decoration: none;
+    }
+  </style>
+  <base target="_blank">
+
+</head>
+
+<body>
+  <d-front-matter>
+    <script id='distill-front-matter' type="text/json">{
+    "title": "JaxMARL: Multi-Agent RL Environments in JAX",
+    "description": "We provide JAX-based implementations of several popular MARL environments and algorithms",
+    "published": "November 17, 2023",
+    "pubUrl": "https://arxiv.org/abs/2311.10090",
+    "pubVenue": "arXiv",
+    "authors": [
+      {
+        "author":"Alex Rutherford, Ben Ellis, Chris Lu",
+        "authorURL":"https://foersterlab.com/",
+        "affiliations": [
+          {"name": "University of Oxford", "url":"https://twitter.com/FLAIR_Ox"}]
+      }
+    ],
+    "katex": {
+      "delimiters": [
+        {"left": "$$", "right": "$$", "display": false}
+      ]
+    }
+  }</script>
+  </d-front-matter>
+  <div id='cover'>
+    <div id="cover-video-tint"></div>
+    <d-title id="title">
+    </d-title>
+  </div>
+  <d-byline></d-byline>
+
+  <d-article>
+
+    <h2>Overview</h2>
+
+    <p>
+      We present JaxMARL, a library of multi-agent reinforcement learning (MARL) environments and
+      algorithms. We find JAX's hardware acceleration means that per-run our training pipeline is 12500x faster than
+      existing approaches. We also introduce SMAX, a vectorised, simplified version of the popular
+      StarCraft Multi-Agent Challenge, which removes the need to run the StarCraft II game
+      engine. Try it out here: <a href="https://github.com/flairox/jaxmarl">https://github.com/flairox/jaxmarl</a>.
+    </p>
+
+    <figure>
+      <div class="row">
+        <div class="column" style="width:50.0%">
+          <img src="dist/gifs/storm.gif" alt="STORM-gif" style="width:100.0%">
+        </div>
+        <div class="column" style="width:50.0%">
+          <img src="dist/gifs/smax.gif" alt="SMAX-gif" style="width:100.0%">
+        </div>
+      </div>
+      <div class="row">
+        <div class="column" style="width:50.0%">
+          <img src="dist/gifs/qmix_MPE_simple_tag_v3.gif" alt="MPE-gif" style="width:100.0%">
+        </div>
+        <div class="column" style="width:50.0%">
+          <img src="dist/gifs/cramped_room.gif" alt="OVERCOOKED-gif" style="width:100.0%">
+        </div>
+      </div>
+    </figure>
+
+    <h2>Background</h2>
+
+    <h3>Multi-Agent RL</h3>
+
+    <p>
+      Multi-Agent Reinforcement Learning (MARL) is an area of machine learning where multiple agents learn to make
+      decisions in a shared environment. Unlike traditional reinforcement learning which focuses on a single agent, MARL
+      involves multiple, simultaneously operating agents, each learning from their own experiences and the collective
+      experiences of others. These agents can be cooperative, competitive, or both.
+    </p>
+
+    <h3>Pure JAX</h3>
+
+    <p>
+      JAX is a python library that enables programmers to use a simple numpy-like interface to easily run programs on
+      accelerators. Recently, doing end-to-end single-agent RL on the accelerator using JAX has shown incredibe
+      benefits, including training speed ups of up to 4000x.
+      To understand the reasons for such massive speed-ups in-depth, we recommend reading the <a
+        href="https://chrislu.page/blog/meta-disco/">PureJaxRL blog post</a> and <a
+        href="https://github.com/luchris429/purejaxrl">repository</a>. One of the key enablers of the PureJaxRL
+      framework was the recreation of popular RL environments in JAX, including libraries
+      such as <a href="https://github.com/RobertTLange/gymnax">Gymnax</a> and <a
+        href="https://github.com/google/brax">Brax</a>. However,
+      these environments were not yet translated to JAX for MARL until now. By providing JAX-based MARL environments and
+      algorithms, we achieve speedups of up to 12500x over existing approaches.
+    </p>
+
+    <h2>JaxMARL Environments</h2>
+
+
+    <div class="centered-content-container">
+      <figure>
+        <img id="environments" src="dist/img/environments.png" />
+        <figcaption style="text-align: center;">Figure 1: Environments available in JaxMARL. Top row, from left: MABrax,
+          MPE, Overcooked, STORM. Bottom Row, from left: Hanabi, Switch Riddle, Coin Game, SMAX.</figcaption>
+      </figure>
+    </div>
+
+    <h3>Environments and Benchmarks</h3>
+
+    We present our provided JAX-based environment suites above in Figure 1. To get an idea of the speed-ups provided by
+    our library, we refer readers to Table 1 below.
+
+    <div class="centered-content-container">
+      <figure>
+        <img id="environments" src="dist/img/speeds.png" />
+        <figcaption style="text-align: center;">Table 1:Benchmark results for JAX-based MARL environments
+          (steps-per-second) when taking random actions on an A100. All environments are significantly faster than
+          existing CPU implementations.</figcaption>
+      </figure>
+    </div>
+
+    <h3>Details on New Environments</h3>
+
+    <p>
+      In this section, we describe in-detail two of our new environment suites, STORM and SMAX. STORM is inspired by the
+      <a href="https://github.com/google-deepmind/meltingpot">Melting Pot</a> environment suite and SMAX is inspired by
+      the <a href="https://github.com/oxwhirl/smac">The StarCraft Multi-Agent Challenge (SMAC)</a>.
+    </p>
+    <p><b><em>STORM</em></b></p>
+    <details>
+      <p>
+
+      </p>
+    </details>
+
+    <p>
+
+    </p>
+
+    <p><b><em>SMAX</em></b></p>
+    <details>
+      <p>The StarCraft Multi-Agent Challenge (SMAC) is a popular benchmark but has a number of
+        shortcomings.
+        First, as noted and addressed in SMACv2, SMAC is not particularly stochastic. This means that non-trivial
+        win-rates are
+        possible on many SMAC maps by conditioning a policy only on the timestep and agent ID.
+        Additionally, SMAC relies
+        on StarCraft II as a simulator. While this allows SMAC to use the wide range of units, objects and
+        terrain available
+        in StarCraft II, running an entire instance of StarCraft II is slow and memory intensive.
+        StarCraft II runs on the CPU and therefore SMAC's
+        parallelisation is severely limited with typical academic compute.</p>
+
+      <p>Using the StarCraft II game engine also constrains environment design. For example, StarCraft II groups units
+        into three <em>races</em>
+        and does not allow units of different races on the same team, limiting the variety
+        of scenarios that can be generated. Secondly, SMAC does not support a competitive self-play setting without
+        significant engineering work.
+        The purpose of SMAX is to address these limitations. It provides access to a simplified SMAC-like,
+        hardware-accelerated, customisable environment that supports self-play and custom unit types.
+        SMAX models units as discs in a continuous 2D space.
+      </p>
+
+      <p>SMAX also features a different, and more sophisticated,
+        heuristic AI. The heuristic in SMAC simply moves to a fixed location, attacking any enemies
+        it encounters along the way, and the heuristic
+        in SMACv2 globally pursues the nearest agent. Thus the SMAC AI often does not aggressively
+        pursue enemies that run away, and cannot generalise to the SMACv2 start positions, whereas the
+        SMACv2 heuristic AI conditions on global information and is exploitable because of its tendency to
+        flip-flop between two similarly close enemies. SMAC's heuristic AI must be coded in the map editor,
+        which does not provide a simple coding interface. The diagram below illustrates these disadvantages.
+      </p>
+
+      <div class="centered-content-container">
+        <figure>
+          <img id="SMAC disadvantages" src="dist/img/SMAC_heuristic_ai.png" />
+          <figcaption style="text-align: center;">Figure 2: Disadvantages and failure cases of the SMAC
+            and SMACv2 enemy heuristic AI.</figcaption>
+        </figure>
+      </div>
+
+
+      <p>In contrast, SMAX features a <em>decentralised</em> heuristic AI that can effectively find enemies
+        without requiring the global
+        information of the SMACv2 heuristic. This guarantees that in principle a 50%
+        win rate is always achievable by copying the decentralised heuristic policy exactly.
+        This means any win-rate below 50% represents a concrete failure to learn. Some of the
+        capabilities of the SMAX heuristic AI are illustrated in the Figure below.
+      </p>
+
+      <div class="centered-content-container">
+        <figure>
+          <img id="SMAX heuristic AI" src="dist/img/smax_heuristic_ai.png" />
+          <figcaption style="text-align: center;">Figure 3: Illustration of the capabilities of the SMAX
+            heuristic enemy AI.</figcaption>
+        </figure>
+      </div>
+
+      <p>
+        SMAX scenarios incorporate both a number of the original scenarios from SMAC and scenarios
+        similar to those found in SMACv2. The latter sample units uniformly across
+        all SMAX unit types (stalker, zealot, hydralisk, zergling, marine, marauder) and ensure
+        fairness by having identical team composition for the enemy and ally teams. The details of the
+        scenarios are given in the Table below.
+      </p>
+
+      <div class="centered-content-container">
+        <table>
+          <tr>
+            <th>Scenario</th>
+            <th>Ally Units</th>
+            <th>Enemy Units</th>
+            <th>Start Positions</th>
+          </tr>
+          <tr>
+            <td>2s3z</td>
+            <td>2 stalkers and 3 zealots</td>
+            <td>2 stalkers and 3 zealots</td>
+            <td>Fixed</td>
+          </tr>
+          <tr>
+            <td>3s5z</td>
+            <td>3 stalkers and 5 zealots</td>
+            <td>3 stalkers and 5 zealots</td>
+            <td>Fixed</td>
+          </tr>
+          <tr>
+            <td>5m_vs_6m</td>
+            <td>5 marines</td>
+            <td>6 marines</td>
+            <td>Fixed</td>
+          </tr>
+          <tr>
+            <td>10m_vs_11m</td>
+            <td>10 marines</td>
+            <td>11 marines</td>
+            <td>Fixed</td>
+          </tr>
+          <tr>
+            <td>27m_vs_30m</td>
+            <td>27 marines</td>
+            <td>30 marines</td>
+            <td>Fixed</td>
+          </tr>
+          <tr>
+            <td>3s5z_vs_3s6z</td>
+            <td>3 stalkers and 5 zealots</td>
+            <td>3 stalkers and 6 zealots</td>
+            <td>Fixed</td>
+          </tr>
+          <tr>
+            <td>3s_vs_5z</td>
+            <td>3 stalkers</td>
+            <td>5 zealots</td>
+            <td>Fixed</td>
+          </tr>
+          <tr>
+            <td>6h_vs_8z</td>
+            <td>6 hydralisks</td>
+            <td>8 zealots</td>
+            <td>Fixed</td>
+          </tr>
+          <tr>
+            <td>smacv2_5_units</td>
+            <td>5 uniformly randomly chosen</td>
+            <td>5 uniformly randomly chosen</td>
+            <td>SMACv2-style</td>
+          </tr>
+          <tr>
+            <td>smacv2_10_units</td>
+            <td>10 uniformly randomly chosen</td>
+            <td>10 uniformly randomly chosen</td>
+            <td>SMACv2-style</td>
+          </tr>
+          <tr>
+            <td>smacv2_20_units</td>
+            <td>20 uniformly randomly chosen</td>
+            <td>20 uniformly randomly chosen</td>
+            <td>SMACv2-style</td>
+          </tr>
+        </table>
+
+      </div>
+      <figcaption style="text-align: center;">Table 1: Units and start positions of
+        different SMAX scenarios</figcaption>
+    </details>
+
+    <h3>Algorithms</h3>
+
+    <p>
+      We can also modify PureJaxRL's PPO implementation to quickly train Independent PPO (IPPO) agents on these
+      environments. We include a simple colab notebook to demonstrate this <a
+        href="https://colab.research.google.com/github/FLAIROx/JaxMARL/blob/main/jaxmarl/tutorials/JaxMARL_Walkthrough.ipynb">here</a>.
+
+      For training on MPE Spread, we can compare directly to the popular <a
+        href="https://github.com/Replicable-MARL/MARLlib">MARLLIB</a> IPPO implementation. JaxMARL achieves very similar
+      results while running over 100x faster, as seen in the Figure below!
+    </p>
+    <figure>
+      <div class="row">
+        <div class="column" style="width:50.0%">
+          <img src="dist/img/mpe_spread_tc.jpg" alt="Spread-Frames" style="width:100.0%">
+        </div>
+        <div class="column" style="width:50.0%">
+          <img src="dist/img/mpe_spread_rew.jpg" alt="Spread-Seconds" style="width:100.0%">
+        </div>
+      </div>
+      <figcaption style="text-align: center;">Figure 5: </figcaption>
+    </figure>
+
+    <p>
+      By just adding a few lines of code, we can then vmap the <i>entire</i> IPPO algorithm. This allows us to train
+      many independent runs in parallel on a single GPU. We show the speeds in the figure below. This is extremely
+      useful for collecting a statistically significant number of seeds, hyperparameter tuning, and meta-evolution!
+    </p>
+    <figure>
+      <div class="row">
+        <div class="column" style="width:50.0%">
+          <img src="dist/img/mpe_spread_time.jpg" alt="Spread-Vector" style="width:100.0%">
+        </div>
+        <div class="column" style="width:50.0%">
+          <img src="dist/img/smax_times_9_training.jpg" alt="SMAX-Vector" style="width:100.0%">
+        </div>
+      </div>
+      <figcaption style="text-align: center;">Figure 6: </figcaption>
+    </figure>
+
+    <p>
+      In MPE Spread, we can run 1024 training runs in almost 10x less time than it takes to run a single training run
+      using MARLLIB! That's a 10000x speedup! Furthermore, we perform the same experiment on SMAX and find that we can
+      train 512 runs in SMAX's 2sz in almost 100x less time than it takes to run a single training run using PyMARL.
+    </p>
+    <p>
+      Furthermore, we incldue several other popular algorithms in JaxMARL, including <a
+        href="https://arxiv.org/abs/1803.11485">QMIX</a> and <a href="https://arxiv.org/abs/1706.05296">VDN</a>.
+    </p>
+
+    <figure>
+      <div class="row">
+        <div class="column" style="width:47.0%">
+          <img src="dist/img/pymarl_jax_spread.jpg" alt="QMIX-Perf" style="width:100.0%">
+        </div>
+        <div class="column" style="width:53.0%">
+          <img src="dist/img/qmix_batch_speed.jpg" alt="QMIX-Speed" style="width:100.0%">
+        </div>
+      </div>
+      <figcaption style="text-align: center;">Figure 7: </figcaption>
+    </figure>
+
+
+    <h2>Conclusion</h2>
+
+    <p>
+      We introduced JaxMARL, a pure JAX-based library of multi-agent reinforcement learning (MARL) environments
+      and algorithms. We show that we can achieve massive speed ups in MARL training, enabling faster
+      iteration speeds and hyperparameter tuning while also lowering the computational barrier to entry for MARL.
+    </p>
+
+    <p>
+      We highly recommend reading <a href="https://arxiv.org/abs/2311.10090">the associated paper</a> to get a more
+      in-depth explanation of the library and to <a href="https://github.com/FLAIROx/JaxMARL">try the repo out for
+        yourself!</a>
+    </p>
+
+    <h2>Related Works</h2>
+
+    <p>
+      This works is heavily related to and builds on many other works. We would like to highlight some of the works that
+      we believe would be relevant to readers.
+
+      <li> <a href="https://github.com/instadeepai/jumanji">Jumanji. A suite of JAX-based RL environments. It includes
+          some multi-agent ones such as RobotWarehouse.</a>
+      </li>
+      <li><a href="https://github.com/proroklab/VectorizedMultiAgentSimulator">VectorizedMultiAgentSimulator (VMAS). It
+          performs similar vectorization for some MARL environments, but is done in PyTorch.</a>
+      </li>
+      <li><a href="https://github.com/instadeepai/Mava">MAVA. A lightweight and performant library for MARL algorithms
+          in JAX, based on CleanRL and PureJaxRL</a>
+      </li>
+      <li><a href="https://github.com/ffelten/CrazyRL">CrazyRL. A repository with JAX-based environments and MARL
+          algorithms for drones.
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/luchris429/purejaxrl/tree/main">PureJaxRL. A repository for single-agent RL entirely
+          in JAX.
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/RobertTLange/gymnax/tree/main">Gymnax. A repository for single-agent RL environments
+          in JAX</a>
+      </li>
+    </p>
+
+  </d-article>
+
+  <d-appendix>
+    <h3>Acknowledgements</h3>
+    <p>
+      We would like to thank Matthew Jackson for helping set up the blog website. We thank Minqi Jiang, Mikayel
+      Samvelyan and Jakob Foerster for their help with this blog post. This project was a large collaboration across
+      many impactful contributors and labs.
+    </p>
+
+    <h3>Citation</h3>
+    <p>
+      For attribution in academic contexts, please cite this work as:
+    </p>
+
+    <pre
+      class="citation short">Rutherford, Alex et al. "JaxMARL: Multi-Agent RL Environments in JAX." arXiv preprint arXiv:2311.10090 (2023).</pre>
+
+    <p>BibTeX citation</p>
+    <pre class="citation long">
+    @article{flair2023jaxmarl,
+      title={JaxMARL: Multi-Agent RL Environments in JAX},
+      author={Alexander Rutherford and Benjamin Ellis and Matteo Gallici and Jonathan Cook and Andrei Lupu and Gardar Ingvarsson and Timon Willi and Akbir Khan and Christian Schroeder de Witt and Alexandra Souly and Saptarashmi Bandyopadhyay and Mikayel Samvelyan and Minqi Jiang and Robert Tjarko Lange and Shimon Whiteson and Bruno Lacerda and Nick Hawes and Tim Rocktaschel and Chris Lu and Jakob Nicolaus Foerster}
+      journal={arXiv preprint arXiv:2311.10090},
+      year={2023}
+    }
+    </pre>
+
+    <d-bibliography src="dist/bibliography.bib"></d-bibliography>
+  </d-appendix>
+
+</body>

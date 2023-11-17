@@ -1,0 +1,15 @@
+*~
+.venv
+venv
+env
+!.gitkeep
+tmp
+.DS_Store
+.idea
+*.log
+*.map
+*.pyc
+*.h5
+__pycache__/
+wandb/
+node_modules/
