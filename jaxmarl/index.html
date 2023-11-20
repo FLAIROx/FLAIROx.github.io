@@ -117,10 +117,15 @@
 
     <p>
       We present JaxMARL, a library of multi-agent reinforcement learning (MARL) environments and
-      algorithms. We find JAX's hardware acceleration means that per-run our training pipeline is 12500x faster than
-      existing approaches. We also introduce SMAX, a vectorised, simplified version of the popular
+      algorithms. We include implementations of the Hanabi Learning Environment, Overcooked, Multi-Agent 
+      Brax, MPE, Switch Riddle, and Spatial-Temporal Representations of Matrix Games (STORM), which allows 
+      embedding any matrix game into a stochastic environment. 
+      <b>We find JAX's hardware acceleration means that per-run our training pipeline is 12500x faster than
+      existing approaches</b>. We also introduce <b>SMAX</b>, a vectorised version of the popular
       StarCraft Multi-Agent Challenge, which removes the need to run the StarCraft II game
-      engine. Try it out here: <a href="https://github.com/flairox/jaxmarl">https://github.com/flairox/jaxmarl</a>.
+      engine. By significantly speeding up training, JaxMARL enables new research into areas such as Multi-Agent 
+      Meta-Learning as well as significantly easing and improving evaluation in MARL. 
+      Try it out here: <a href="https://github.com/flairox/jaxmarl">https://github.com/flairox/jaxmarl</a>!
     </p>
 
     <figure>
@@ -198,42 +203,21 @@
     <h3>Details on New Environments</h3>
 
     <p>
-      In this section, we describe in-detail two of our new environment suites, STORM and SMAX. STORM is inspired by the
+      In this section, we describe the environments in JaxMARL. As part of JaxMARL, we introduce two new environments:
+      STORM and SMAX. STORM is inspired by the
       <a href="https://github.com/google-deepmind/meltingpot">Melting Pot</a> environment suite and SMAX is inspired by
       the <a href="https://github.com/oxwhirl/smac">The StarCraft Multi-Agent Challenge (SMAC)</a>.
     </p>
-    <p><b><em>STORM</em></b></p>
-    <details>
-      <p>Spatial-Temporal Representations of Matrix Games (STORM) is inspired by the 
-        "in the Matrix" games in Melting Pot 2.0. The STORM environment expands on matrix games 
-        by representing them as grid-world scenarios. Agents collect resources which define their 
-        strategy during interactions and are rewarded based on a pre-specified payoff matrix.</p> 
-
-        <p>This allows for the embedding of fully cooperative, competitive or general-sum games, 
-        such as the prisoner's dilemma.
-
-        Thus, STORM can be used for studying paradigms such as <em>opponent shaping</em>, where 
-        agents act with the intent to change other agents' learning dynamics, which has been 
-        empirically shown to lead to more prosocial outcomes.</p>
-
-        <p>Compared to the Coin Game or matrix games, the grid-world setting presents a variety 
-        of new challenges such as partial observability, multi-step agent interactions, 
-        temporally-extended actions, and longer time horizons.
-        
-        Unlike the "in the Matrix" games from Melting Pot, STORM features stochasticity, 
-        increasing the difficulty. 
-      </p>
-    </details>
-
-    <p>
+    
 
     </p>
 
     <p><b><em>SMAX</em></b></p>
     <details>
-      <p>The StarCraft Multi-Agent Challenge (SMAC) is a popular benchmark but has a number of
+      <p>The <a href="https://github.com/oxwhirl/smac">StarCraft Multi-Agent Challenge (SMAC)</a> is a popular benchmark but 
+        has a number of
         shortcomings.
-        First, as noted and addressed in SMACv2, SMAC is not particularly stochastic. This means that non-trivial
+        First, as noted and addressed in <a href="https://github.com/oxwhirl/smacv2/tree/main">SMACv2</a>, SMAC is not particularly stochastic. This means that non-trivial
         win-rates are
         possible on many SMAC maps by conditioning a policy only on the timestep and agent ID.
         Additionally, SMAC relies
@@ -377,6 +361,106 @@
         different SMAX scenarios</figcaption>
     </details>
 
+    <p><b><em>STORM</em></b></p>
+    <details>
+      <p>Spatial-Temporal Representations of Matrix Games (STORM) is inspired by the 
+        "in the Matrix" games in Melting Pot 2.0. The STORM environment expands on matrix games 
+        by representing them as grid-world scenarios. Agents collect resources which define their 
+        strategy during interactions and are rewarded based on a pre-specified payoff matrix.</p> 
+
+        <p>This allows for the embedding of fully cooperative, competitive or general-sum games, 
+        such as the prisoner's dilemma.
+
+        Thus, STORM can be used for studying paradigms such as <em>opponent shaping</em>, where 
+        agents act with the intent to change other agents' learning dynamics, which has been 
+        empirically shown to lead to more prosocial outcomes.</p>
+
+        <p>Compared to the Coin Game or matrix games, the grid-world setting presents a variety 
+        of new challenges such as partial observability, multi-step agent interactions, 
+        temporally-extended actions, and longer time horizons.
+        
+        Unlike the "in the Matrix" games from Melting Pot, STORM features stochasticity, 
+        increasing the difficulty. 
+      </p>
+    </details>
+
+    <p>
+
+    <p><b><em>Multi-Agent Particle Environments (MPE)</em></b></p>
+    <details>
+      <p>
+        The multi-agent particle environments feature a 2D world with simple physics where 
+        particle agents can move, communicate, and interact with fixed landmarks.
+        Each specific environment varies the format of the world and the agents' abilities, 
+        creating a diverse set of tasks that include both competitive and cooperative settings.
+        We implement all the MPE scenarios featured in the PettingZoo library and the transitions 
+        of our implementation map exactly to theirs.
+      </p>
+      <p>
+        We additionally include a fully cooperative predator-prey variant of <em>simple tag</em>,
+        which first appeared in <a href="https://github.com/oxwhirl/facmac">FACMAC</a>.
+        The code is structured to allow for straightforward extensions, enabling further tasks 
+        to be added.
+      </p>
+    </details>
+
+    <p><b><em>Overcooked</em></b></p>
+    <details>
+      <p>
+        Inspired by the popular videogame of the same name, Overcooked is commonly used for assessing fully cooperative and fully observable Human-AI task performance. 
+        The aim is to quickly prepare and deliver soup, which involves putting three onions in a pot, cooking the soup, and serving it into bowls.
+        Two agents, or <em>cooks</em>, must coordinate to effectively divide the tasks to maximise their common reward signal. 
+        Our implementation mimics the original from <a href="https://github.com/HumanCompatibleAI/overcooked_ai">Overcooked-AI</a>, including all five original layouts and a simple method for creating additional ones. 
+      </p>
+    </details>
+    
+    <p><b><em>Hanabi</em></b></p>
+    <details>
+      <p>
+        Hanabi is a fully cooperative partially observable multiplayer card game, where players 
+        can observe other players' cards but not their own. 
+        
+        To win, the team must play a series of cards in a specific order while sharing only a 
+        limited amount of information between players.
+
+        As reasoning about the beliefs and intentions of other agents is central to performance, 
+        it is a common benchmark for ZSC and ad-hoc teamplay research. 
+      </p>
+      <p>
+        Our implementation is inspired by the 
+        <a href="https://github.com/google-deepmind/hanabi-learning-environment">Hanabi Learning 
+          Environment</a> and includes custom configurations for varying game settings, such as 
+          the number of colours/ranks, number of players, and number of hint tokens. Compared to 
+          the Hanabi Learning Environment, which is written in C++ and split over dozens of files, 
+          our implementation is a single easy-to-read Python file, which simplifies interfacing 
+          with the library and running experiments.
+
+      </p>
+    </details>
+
+    <p><b><em>MABrax</em></b></p>
+    <details>
+      <p>
+        MABrax is a derivative of <a href="https://github.com/Farama-Foundation/Gymnasium-Robotics">
+          Multi-Agent MuJoCo</a>, an extension of the 
+        <a href="https://github.com/google-deepmind/mujoco">MuJoCo</a> Gym environment, that is 
+        commonly used for benchmarking continuous multi-agent 
+        robotic control. 
+        
+        Our implementation utilises <a href="https://github.com/google/brax">Brax</a> as the 
+        underlying physics engine and includes five of 
+        <em>Multi-Agent MuJoCo</em>'s multi-agent factorisation tasks, where each agent controls 
+        a subset of the joints and only observes the local state. 
+
+        The included tasks are: <tt>ant_4x2</tt>, <tt>halfcheetah_6x1</tt>, <tt>hopper_3x1</tt>, 
+        <tt>humanoid_9|8</tt>, and <tt>walker2d_2x3</tt>.
+        The task descriptions mirror those from <a href="https://github.com/Farama-Foundation/Gymnasium-Robotics">Gymnasium-Robotics</a>.
+
+      </p>
+    </details>
+
+
+
     <h3>Algorithms</h3>
 
     <p>
@@ -422,12 +506,12 @@
 
     <p>
       In MPE Spread, we can run 1024 training runs in almost 10x less time than it takes to run a single training run
-      using MARLLIB! That's a 10000x speedup! Furthermore, we perform the same experiment on SMAX and find that we can
+      using MARLLIB! <b>That's a 10000x speedup!</b> Furthermore, we perform the same experiment on SMAX and find that we can
       train 512 runs in SMAX's 2sz in almost 100x less time than it takes to run a single training run using PyMARL.
     </p>
     <p>
-      Furthermore, we incldue several other popular algorithms in JaxMARL, including <a
-        href="https://arxiv.org/abs/1803.11485">QMIX</a> and <a href="https://arxiv.org/abs/1706.05296">VDN</a>.
+      Furthermore, we include several other popular algorithms in JaxMARL, including <a
+        href="https://arxiv.org/abs/1803.11485">QMIX</a>, <a href="https://arxiv.org/abs/1706.05296">VDN</a> and <a href="https://arxiv.org/abs/2103.01955">MAPPO</a>.
     </p>
 
     <figure>
@@ -456,6 +540,11 @@
       We highly recommend reading <a href="https://arxiv.org/abs/2311.10090">the associated paper</a> to get a more
       in-depth explanation of the library and to <a href="https://github.com/FLAIROx/JaxMARL">try the repo out for
         yourself!</a>
+    </p>
+
+    <p>
+      For more ideas of what you can do with JaxMARL, we recommend checking out the 
+      <a href="https://chrislu.page/blog/meta-disco/">PureJaxRL blog post</a>!
     </p>
 
     <h2>Related Works</h2>
