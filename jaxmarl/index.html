@@ -76,6 +76,10 @@
       display: inline;
       text-decoration: none;
     }
+
+    details {
+      padding-bottom: 1cm;
+    }
   </style>
   <base target="_blank">
 
@@ -116,18 +120,31 @@
     <h2>Overview</h2>
 
     <p>
-      We present JaxMARL, a library of multi-agent reinforcement learning (MARL) environments and
-      algorithms. We include implementations of the Hanabi Learning Environment, Overcooked, Multi-Agent 
-      Brax, MPE, Switch Riddle, and Spatial-Temporal Representations of Matrix Games (STORM), which allows 
-      embedding any matrix game into a stochastic environment. 
-      <b>We find JAX's hardware acceleration means that per-run our training pipeline is 12500x faster than
-      existing approaches</b>. We also introduce <b>SMAX</b>, a vectorised version of the popular
+      We present <a href="https://github.com/flairox/jaxmarl">JaxMARL</a>, a library of multi-agent reinforcement
+      learning (MARL) environments and algorithms based on end-to-end GPU acceleration that achieves up to 12500x
+      speedup. The environments in JaxMARL span cooperative, competitive, and mixed games, discrete and continuous state
+      and action spaces, and <a href="https://arxiv.org/abs/2003.02979">zero-shot</a> and <a
+        href="https://arxiv.org/abs/1705.08926">CTDE</a> settings.
+      We specifically include implementations of the Hanabi Learning Environment, Overcooked, Multi-Agent Brax, MPE,
+      Switch Riddle, Coin Game, and Spatial-Temporal Representations of Matrix Games (STORM).
+      <b>Because of JAX's hardware acceleration, our per-run training pipeline is 12500x faster than
+        existing approaches</b>.
+      We also introduce <b>SMAX</b>, a vectorised version of the popular
       StarCraft Multi-Agent Challenge, which removes the need to run the StarCraft II game
-      engine. By significantly speeding up training, JaxMARL enables new research into areas such as Multi-Agent 
-      Meta-Learning as well as significantly easing and improving evaluation in MARL. 
+      engine. By significantly speeding up training, JaxMARL enables new research into areas such as multi-agent
+      meta-learning as well as significantly easing and improving evaluation in MARL.
       Try it out here: <a href="https://github.com/flairox/jaxmarl">https://github.com/flairox/jaxmarl</a>!
     </p>
 
+    <p>
+      JAX is a Python library that enables programmers to use a simple numpy-like interface to easily run programs on
+      accelerators. Recently, doing end-to-end single-agent RL on the accelerator using JAX has shown incredible
+      benefits. To understand the reasons for such massive speed-ups in depth, we recommend reading the <a
+        href="https://chrislu.page/blog/meta-disco/">PureJaxRL blog post</a> and <a
+        href="https://github.com/luchris429/purejaxrl">repository</a>.
+    </p>
+
+    <!-- 
     <figure>
       <div class="row">
         <div class="column" style="width:50.0%">
@@ -145,51 +162,66 @@
           <img src="dist/gifs/cramped_room.gif" alt="OVERCOOKED-gif" style="width:100.0%">
         </div>
       </div>
-    </figure>
-
-    <h2>Background</h2>
-
-    <h3>Multi-Agent RL</h3>
-
-    <p>
-      Multi-Agent Reinforcement Learning (MARL) is an area of machine learning where multiple agents learn to make
-      decisions in a shared environment. Unlike traditional reinforcement learning which focuses on a single agent, MARL
-      involves multiple, simultaneously operating agents, each learning from their own experiences and the collective
-      experiences of others. These agents can be cooperative, competitive, or both. The environments in JaxMARL span 
-      cooperative, competitive and mixed games, discrete and continuous state and action spaces, and zero-shot and CTDE settings.
-    </p>
-
-    <h3>Pure JAX</h3>
-
-    <p>
-      JAX is a python library that enables programmers to use a simple numpy-like interface to easily run programs on
-      accelerators. Recently, doing end-to-end single-agent RL on the accelerator using JAX has shown incredibe
-      benefits, including training speed ups of up to 4000x.
-      To understand the reasons for such massive speed-ups in-depth, we recommend reading the <a
-        href="https://chrislu.page/blog/meta-disco/">PureJaxRL blog post</a> and <a
-        href="https://github.com/luchris429/purejaxrl">repository</a>. One of the key enablers of the PureJaxRL
-      framework was the recreation of popular RL environments in JAX, including libraries
-      such as <a href="https://github.com/RobertTLange/gymnax">Gymnax</a> and <a
-        href="https://github.com/google/brax">Brax</a>. However,
-      these environments were not yet translated to JAX for MARL until now. By providing JAX-based MARL environments and
-      algorithms, we achieve speedups of up to 12500x over existing approaches.
-    </p>
+    </figure> 
+    -->
 
     <h2>JaxMARL Environments</h2>
-
-
+    <!-- 
     <div class="centered-content-container">
       <figure>
         <img id="environments" src="dist/img/environments.png" />
-        <figcaption style="text-align: center;">Figure 1: Environments available in JaxMARL. Top row, from left: MABrax,
+        <figcaption style="text-align: center;">Environments available in JaxMARL. Top row, from left: MABrax,
           MPE, Overcooked, STORM. Bottom Row, from left: Hanabi, Switch Riddle, Coin Game, SMAX.</figcaption>
+      </figure>
+    </div> -->
+
+    <!-- <div class="centered-content-container">
+      <figure>
+        <img id="environments" src="dist/img/environments.png" />
+        <figcaption style="text-align: center;">Environments available in JaxMARL. Top row, from left: MABrax,
+          MPE, Overcooked, STORM. Bottom Row, from left: Hanabi, Switch Riddle, Coin Game, SMAX.</figcaption>
+      </figure>
+    </div> -->
+
+    <div class="centered-content-container">
+      <figure>
+        <div class="row">
+          <div class="column" style="width:25.0%">
+            <img src="dist/img/mamujoco.png" alt="mamujoco-img" style="width:100.0%">
+          </div>
+          <div class="column" style="width:25.0%">
+            <img src="dist/gifs/storm.gif" alt="STORM-gif" style="width:100.0%">
+          </div>
+          <div class="column" style="width:25.0%">
+            <img src="dist/gifs/smax.gif" alt="SMAX-gif" style="width:100.0%">
+          </div>
+          <div class="column" style="width:25.0%">
+            <img src="dist/img/hanabi2.png" alt="hanabi-2-img" style="width:100.0%">
+          </div>
+        </div>
+        <div class="row">
+          <div class="column" style="width:25.0%">
+            <img src="dist/img/switch_riddle.png" alt="switch-riddle-img" style="width:100.0%">
+          </div>
+          <div class="column" style="width:25.0%">
+            <img src="dist/gifs/qmix_MPE_simple_tag_v3.gif" alt="MPE-gif" style="width:100.0%">
+          </div>
+          <div class="column" style="width:25.0%">
+            <img src="dist/gifs/cramped_room.gif" alt="OVERCOOKED-gif" style="width:100.0%">
+          </div>
+          <div class="column" style="width:25.0%">
+            <img src="dist/img/coin_game_egocentric_orange.png" alt="coin-game-img" style="width:100.0%">
+          </div>
+        </div>
+        <figcaption style="text-align: center;">Environments available in JaxMARL. Top row, from left: MABrax,
+          STORM, SMAX, Hanabi. Bottom Row, from left: Switch Riddle, MPE, Overcooked, Coin Game.</figcaption>
       </figure>
     </div>
 
     <h3>Environments and Benchmarks</h3>
 
-    We present our provided JAX-based environment suites above in Figure 1. To get an idea of the speed-ups provided by
-    our library, we refer readers to Table 1 below.
+    We present visualisations of our provided JAX-based environment suites above. To get an idea of the speed-ups
+    provided by our library, we provide benchmarks for the environments in JaxMARL below.
 
     <div class="centered-content-container">
       <figure>
@@ -200,24 +232,23 @@
       </figure>
     </div>
 
-    <h3>Details on New Environments</h3>
+    <h3>Details on Environments</h3>
 
     <p>
-      In this section, we describe the environments in JaxMARL. As part of JaxMARL, we introduce two new environments:
-      STORM and SMAX. STORM is inspired by the
+      In this section, we describe each of the environments in JaxMARL.
+      This includes two new environments: STORM and SMAX. STORM is inspired by the
       <a href="https://github.com/google-deepmind/meltingpot">Melting Pot</a> environment suite and SMAX is inspired by
       the <a href="https://github.com/oxwhirl/smac">The StarCraft Multi-Agent Challenge (SMAC)</a>.
     </p>
-    
 
-    </p>
-
-    <p><b><em>SMAX</em></b></p>
+    <p><b><em><a href="https://github.com/FLAIROx/JaxMARL/tree/main/jaxmarl/environments/smax">SMAX</a></em></b></p>
     <details>
-      <p>The <a href="https://github.com/oxwhirl/smac">StarCraft Multi-Agent Challenge (SMAC)</a> is a popular benchmark but 
+      <p>The <a href="https://github.com/oxwhirl/smac">StarCraft Multi-Agent Challenge (SMAC)</a> is a popular benchmark
+        but
         has a number of
         shortcomings.
-        First, as noted and addressed in <a href="https://github.com/oxwhirl/smacv2/tree/main">SMACv2</a>, SMAC is not particularly stochastic. This means that non-trivial
+        First, as noted and addressed in <a href="https://github.com/oxwhirl/smacv2/tree/main">SMACv2</a>, SMAC is not
+        particularly stochastic. This means that non-trivial
         win-rates are
         possible on many SMAC maps by conditioning a policy only on the timestep and agent ID.
         Additionally, SMAC relies
@@ -361,114 +392,158 @@
         different SMAX scenarios</figcaption>
     </details>
 
-    <p><b><em>STORM</em></b></p>
+    <p><b><em><a href="https://github.com/FLAIROx/JaxMARL/tree/main/jaxmarl/environments/storm">STORM</a></em></b></p>
     <details>
-      <p>Spatial-Temporal Representations of Matrix Games (STORM) is inspired by the 
-        "in the Matrix" games in Melting Pot 2.0. The STORM environment expands on matrix games 
-        by representing them as grid-world scenarios. Agents collect resources which define their 
-        strategy during interactions and are rewarded based on a pre-specified payoff matrix.</p> 
+      <p>Spatial-Temporal Representations of Matrix Games (STORM) is inspired by the
+        "in the Matrix" games in Melting Pot 2.0. The STORM environment expands on matrix games
+        by representing them as grid-world scenarios. Agents collect resources which define their
+        strategy during interactions and are rewarded based on a pre-specified payoff matrix.</p>
 
-        <p>This allows for the embedding of fully cooperative, competitive or general-sum games, 
+      <p>This allows for the embedding of fully cooperative, competitive or general-sum games,
         such as the prisoner's dilemma.
 
-        Thus, STORM can be used for studying paradigms such as <em>opponent shaping</em>, where 
-        agents act with the intent to change other agents' learning dynamics, which has been 
+        Thus, STORM can be used for studying paradigms such as <em>opponent shaping</em>, where
+        agents act with the intent to change other agents' learning dynamics, which has been
         empirically shown to lead to more prosocial outcomes.</p>
 
-        <p>Compared to the Coin Game or matrix games, the grid-world setting presents a variety 
-        of new challenges such as partial observability, multi-step agent interactions, 
+      <p>Compared to the Coin Game or matrix games, the grid-world setting presents a variety
+        of new challenges such as partial observability, multi-step agent interactions,
         temporally-extended actions, and longer time horizons.
-        
-        Unlike the "in the Matrix" games from Melting Pot, STORM features stochasticity, 
-        increasing the difficulty. 
+
+        Unlike the "in the Matrix" games from Melting Pot, STORM features stochasticity,
+        increasing the difficulty.
       </p>
     </details>
 
-    <p>
-
-    <p><b><em>Multi-Agent Particle Environments (MPE)</em></b></p>
+    <p><b><em><a href="https://github.com/FLAIROx/JaxMARL/tree/main/jaxmarl/environments/mpe">Multi-Agent Particle
+            Environments (MPE)</a></em></b></p>
     <details>
       <p>
-        The multi-agent particle environments feature a 2D world with simple physics where 
+        The multi-agent particle environments feature a 2D world with simple physics where
         particle agents can move, communicate, and interact with fixed landmarks.
-        Each specific environment varies the format of the world and the agents' abilities, 
+        Each specific environment varies the format of the world and the agents' abilities,
         creating a diverse set of tasks that include both competitive and cooperative settings.
-        We implement all the MPE scenarios featured in the PettingZoo library and the transitions 
+        We implement all the MPE scenarios featured in the PettingZoo library and the transitions
         of our implementation map exactly to theirs.
       </p>
       <p>
         We additionally include a fully cooperative predator-prey variant of <em>simple tag</em>,
         which first appeared in <a href="https://github.com/oxwhirl/facmac">FACMAC</a>.
-        The code is structured to allow for straightforward extensions, enabling further tasks 
+        The code is structured to allow for straightforward extensions, enabling further tasks
         to be added.
       </p>
     </details>
 
-    <p><b><em>Overcooked</em></b></p>
+    <p><b><em><a
+            href="https://github.com/FLAIROx/JaxMARL/tree/main/jaxmarl/environments/overcooked">Overcooked</a></em></b>
+    </p>
     <details>
       <p>
-        Inspired by the popular videogame of the same name, Overcooked is commonly used for assessing fully cooperative and fully observable Human-AI task performance. 
-        The aim is to quickly prepare and deliver soup, which involves putting three onions in a pot, cooking the soup, and serving it into bowls.
-        Two agents, or <em>cooks</em>, must coordinate to effectively divide the tasks to maximise their common reward signal. 
-        Our implementation mimics the original from <a href="https://github.com/HumanCompatibleAI/overcooked_ai">Overcooked-AI</a>, including all five original layouts and a simple method for creating additional ones. 
+        Inspired by the popular videogame of the same name, Overcooked is commonly used for assessing fully cooperative
+        and fully observable Human-AI task performance.
+        The aim is to quickly prepare and deliver soup, which involves putting three onions in a pot, cooking the soup,
+        and serving it into bowls.
+        Two agents, or <em>cooks</em>, must coordinate to effectively divide the tasks to maximise their common reward
+        signal.
+        Our implementation mimics the original from <a
+          href="https://github.com/HumanCompatibleAI/overcooked_ai">Overcooked-AI</a>, including all five original
+        layouts and a simple method for creating additional ones.
       </p>
     </details>
-    
-    <p><b><em>Hanabi</em></b></p>
+
+    <p><b><em><a href="https://github.com/FLAIROx/JaxMARL/tree/main/jaxmarl/environments/hanabi">Hanabi</a></em></b></p>
     <details>
       <p>
-        Hanabi is a fully cooperative partially observable multiplayer card game, where players 
-        can observe other players' cards but not their own. 
-        
-        To win, the team must play a series of cards in a specific order while sharing only a 
+        Hanabi is a fully cooperative partially observable multiplayer card game, where players
+        can observe other players' cards but not their own.
+
+        To win, the team must play a series of cards in a specific order while sharing only a
         limited amount of information between players.
 
-        As reasoning about the beliefs and intentions of other agents is central to performance, 
-        it is a common benchmark for ZSC and ad-hoc teamplay research. 
+        As reasoning about the beliefs and intentions of other agents is central to performance,
+        it is a common benchmark for ZSC and ad-hoc teamplay research.
       </p>
       <p>
-        Our implementation is inspired by the 
-        <a href="https://github.com/google-deepmind/hanabi-learning-environment">Hanabi Learning 
-          Environment</a> and includes custom configurations for varying game settings, such as 
-          the number of colours/ranks, number of players, and number of hint tokens. Compared to 
-          the Hanabi Learning Environment, which is written in C++ and split over dozens of files, 
-          our implementation is a single easy-to-read Python file, which simplifies interfacing 
-          with the library and running experiments.
+        Our implementation is inspired by the
+        <a href="https://github.com/google-deepmind/hanabi-learning-environment">Hanabi Learning
+          Environment</a> and includes custom configurations for varying game settings, such as
+        the number of colours/ranks, number of players, and number of hint tokens. Compared to
+        the Hanabi Learning Environment, which is written in C++ and split over dozens of files,
+        our implementation is a single easy-to-read Python file, which simplifies interfacing
+        with the library and running experiments.
 
       </p>
     </details>
 
-    <p><b><em>MABrax</em></b></p>
+    <p><b><em><a href="https://github.com/FLAIROx/JaxMARL/tree/main/jaxmarl/environments/mabrax">MABrax</a></em></b></p>
     <details>
       <p>
         MABrax is a derivative of <a href="https://github.com/Farama-Foundation/Gymnasium-Robotics">
-          Multi-Agent MuJoCo</a>, an extension of the 
-        <a href="https://github.com/google-deepmind/mujoco">MuJoCo</a> Gym environment, that is 
-        commonly used for benchmarking continuous multi-agent 
-        robotic control. 
-        
-        Our implementation utilises <a href="https://github.com/google/brax">Brax</a> as the 
-        underlying physics engine and includes five of 
-        <em>Multi-Agent MuJoCo</em>'s multi-agent factorisation tasks, where each agent controls 
-        a subset of the joints and only observes the local state. 
+          Multi-Agent MuJoCo</a>, an extension of the
+        <a href="https://github.com/google-deepmind/mujoco">MuJoCo</a> Gym environment, that is
+        commonly used for benchmarking continuous multi-agent
+        robotic control.
 
-        The included tasks are: <tt>ant_4x2</tt>, <tt>halfcheetah_6x1</tt>, <tt>hopper_3x1</tt>, 
+        Our implementation utilises <a href="https://github.com/google/brax">Brax</a> as the
+        underlying physics engine and includes five of
+        <em>Multi-Agent MuJoCo</em>'s multi-agent factorisation tasks, where each agent controls
+        a subset of the joints and only observes the local state.
+
+        The included tasks are: <tt>ant_4x2</tt>, <tt>halfcheetah_6x1</tt>, <tt>hopper_3x1</tt>,
         <tt>humanoid_9|8</tt>, and <tt>walker2d_2x3</tt>.
-        The task descriptions mirror those from <a href="https://github.com/Farama-Foundation/Gymnasium-Robotics">Gymnasium-Robotics</a>.
-
+        The task descriptions mirror those from <a
+          href="https://github.com/Farama-Foundation/Gymnasium-Robotics">Gymnasium-Robotics</a>.
       </p>
     </details>
 
+    <p><b><em><a href="https://github.com/FLAIROx/JaxMARL/tree/main/jaxmarl/environments/switch_riddle">Switch
+            Riddle</a></em></b></p>
+    <details>
+      <p>
+        Originally used to illustrate the <a href="https://arxiv.org/abs/1605.06676">Differentiable Inter-Agent Learning
+          algorithm</a>, Switch Riddle is a simple cooperative communication environment that we include as a debugging
+        tool.
+      </p>
+      <p>
+        N prisoners held by a warden can secure their release by collectively ensuring that each has passed through a
+        room with a light bulb and a switch. Each day, a prisoner is chosen at random to enter this room. They have
+        three choices: do nothing, signal to the next prisoner by toggling the light, or inform the warden they think
+        all prisoners have been in the room.
+      </p>
+      <p>
+        The game ends when a prisoner informs the warden or the maximum time steps are reached. The rewards are +1 if
+        the prisoner informs the warden, and all prisoners have been in the room, -1 if the prisoner informs the warden
+        before all prisoners have taken their turn, and 0 otherwise, including when the maximum time steps are reached.
+        We benchmark using the implementation from <a href="https://github.com/irenezhang30/MARCO">MARCO</a>.
+      </p>
+    </details>
 
+    <p><b><em><a href="https://github.com/FLAIROx/JaxMARL/tree/main/jaxmarl/environments/coin_game">Coin
+            Game</a></em></b></p>
+    <details>
+      <p>
+        Coin Game is a two-player grid-world environment which emulates social dilemmas such as the iterated prisoner's
+        dilemma. Used as a benchmark for the general-sum setting, it expands on simpler social
+        dilemmas by adding a high-dimensional state. It is commonly used to study opponent shaping in works such as
+        <a href="https://arxiv.org/abs/1709.04326">Learning with Opponent-Learning Awareness</a> and its <a
+          href="https://proceedings.neurips.cc/paper_files/paper/2022/file/a882dab38011264d2ca8dba3cca9faf1-Paper-Conference.pdf">following</a>
+        <a href="https://arxiv.org/abs/2205.01447">works</a>.
+      </p>
+
+      <p>Two players, `red' and `blue' move in a grid world and are each
+        awarded 1 point for collecting any coin. However, `red' loses 2 points if `blue' collects a red coin and vice
+        versa. Thus, if both agents ignore colour when collecting coins their expected reward is 0.
+      </p>
+    </details>
 
     <h3>Algorithms</h3>
 
     <p>
-      We can also modify PureJaxRL's PPO implementation to quickly train Independent PPO (IPPO) agents on these
-      environments. We include a simple colab notebook to demonstrate this <a
+      We provide an Independent PPO (IPPO) implementation and include results on these
+      environments. Here's a simple colab notebook you can run to test this out <a
         href="https://colab.research.google.com/github/FLAIROx/JaxMARL/blob/main/jaxmarl/tutorials/JaxMARL_Walkthrough.ipynb">here</a>.
 
-      For training on MPE Spread, we can compare directly to the popular <a
+      For training on MPE Spread, we compare directly to the popular <a
         href="https://github.com/Replicable-MARL/MARLlib">MARLLIB</a> IPPO implementation. JaxMARL achieves very similar
       results while running over 100x faster, as seen in the Figure below!
     </p>
@@ -481,12 +556,12 @@
           <img src="dist/img/mpe_spread_rew.jpg" alt="Spread-Seconds" style="width:100.0%">
         </div>
       </div>
-      <figcaption style="text-align: center;">Figure 5: Training Return for MPE Simple Spread for 
-      SMAX and MARLLIB against timesteps (left) and seconds in wall clock time (right)</figcaption>
+      <figcaption style="text-align: center;">Training Return for MPE Simple Spread for
+        SMAX and MARLLIB against log timesteps (left) and seconds in wall clock time (right)</figcaption>
     </figure>
 
     <p>
-      By just adding a few lines of code, we can then vmap the <i>entire</i> IPPO algorithm. This allows us to train
+      By just adding a few lines of code, we then vmap the <i>entire</i> IPPO algorithm. This allows us to train
       many independent runs in parallel on a single GPU. We show the speeds in the figure below. This is extremely
       useful for collecting a statistically significant number of seeds, hyperparameter tuning, and meta-evolution!
     </p>
@@ -499,19 +574,21 @@
           <img src="dist/img/smax_times_9_training.jpg" alt="SMAX-Vector" style="width:100.0%">
         </div>
       </div>
-      <figcaption style="text-align: center;">Figure 6: Plot of the time to train different nummbers of
-      teams of agents for SMAX and MPE Simple Spread v3. By using JAX's `vmap` feature, training 
-      scales well in the number of agents.</figcaption>
+      <figcaption style="text-align: center;">Plot of the time to train different nummbers of
+        teams of agents for SMAX and MPE Simple Spread v3. By using JAX's `vmap` feature, training
+        scales well in the number of agents.</figcaption>
     </figure>
 
     <p>
-      In MPE Spread, we can run 1024 training runs in almost 10x less time than it takes to run a single training run
-      using MARLLIB! <b>That's a 10000x speedup!</b> Furthermore, we perform the same experiment on SMAX and find that we can
+      In MPE Spread, we run 1024 training runs in almost 10x less time than it takes to run a single training run
+      using MARLLIB! <b>That's a 10000x speedup!</b> Furthermore, we perform the same experiment on SMAX and find that
+      we can
       train 512 runs in SMAX's 2sz in almost 100x less time than it takes to run a single training run using PyMARL.
     </p>
     <p>
       Furthermore, we include several other popular algorithms in JaxMARL, including <a
-        href="https://arxiv.org/abs/1803.11485">QMIX</a>, <a href="https://arxiv.org/abs/1706.05296">VDN</a> and <a href="https://arxiv.org/abs/2103.01955">MAPPO</a>.
+        href="https://arxiv.org/abs/1803.11485">QMIX</a>, <a href="https://arxiv.org/abs/1706.05296">VDN</a> and <a
+        href="https://arxiv.org/abs/2103.01955">MAPPO</a>.
     </p>
 
     <figure>
@@ -523,8 +600,8 @@
           <img src="dist/img/qmix_batch_speed.jpg" alt="QMIX-Speed" style="width:100.0%">
         </div>
       </div>
-      <figcaption style="text-align: center;">Figure 7: Training performance on MPE Simple Spread v3 for  
-      PyMARL and JaxMARL (left) and the time to train different numbers of teams of agents (right). </figcaption>
+      <figcaption style="text-align: center;">Training performance on MPE Simple Spread v3 for
+        PyMARL and JaxMARL (left) and the time to train different numbers of teams of agents (right). </figcaption>
     </figure>
 
 
@@ -532,7 +609,7 @@
 
     <p>
       We introduced JaxMARL, a pure JAX-based library of multi-agent reinforcement learning (MARL) environments
-      and algorithms. We show that we can achieve massive speed ups in MARL training, enabling faster
+      and algorithms. We show that we achieve massive speed ups in MARL training, enabling faster
       iteration speeds and hyperparameter tuning while also lowering the computational barrier to entry for MARL.
     </p>
 
@@ -543,7 +620,7 @@
     </p>
 
     <p>
-      For more ideas of what you can do with JaxMARL, we recommend checking out the 
+      For more ideas of what you can do with JaxMARL, we recommend checking out the
       <a href="https://chrislu.page/blog/meta-disco/">PureJaxRL blog post</a>!
     </p>
 
