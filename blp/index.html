@@ -1,0 +1,823 @@
+<!--
+  Copyright 2018 The Distill Template Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!doctype html>
+
+<head>
+  <script defer src="dist/template.v2.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf8">
+</head>
+<style id="distill-article-specific-styles">
+  .subgrid {
+grid-column: screen; 
+display: grid; 
+grid-template-columns: inherit;
+grid-template-rows: inherit;
+grid-column-gap: inherit;
+grid-row-gap: inherit;
+}
+
+d-figure.base-grid {
+grid-column: screen;
+background: hsl(0, 0%, 97%);
+padding: 20px 0;
+border-top: 1px solid rgba(0, 0, 0, 0.1);
+border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+d-figure {
+margin-bottom: 1em;
+position: relative;
+}
+
+d-figure > figure {
+margin-top: 0;
+margin-bottom: 0;
+}
+
+.shaded-figure {
+background-color: hsl(0, 0%, 97%);
+border-top: 1px solid hsla(0, 0%, 0%, 0.1);
+border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
+padding: 30px 0;
+}
+
+.pointer {
+position: absolute;
+width: 26px;
+height: 26px;
+top: 26px;
+left: -48px;
+}
+
+div#observablehq {
+font-family: inherit;
+font-size: inherit;
+}
+
+button {
+font-family : inherit;
+font-size: 1em;
+}
+
+/* Alignment of KaTeX. */
+#gnn-models span.katex-display {
+margin: 0.5em 0 0.5em 0em;
+}
+
+@media (max-width: 1000px) {
+d-contents {
+  justify-self: start;
+  align-self: start;
+  grid-column-start: 2;
+  grid-column-end: 6;
+  padding-bottom: 0.5em;
+  margin-bottom: 1em;
+  padding-left: 0.25em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+}
+
+@media (min-width: 1000px) {
+d-contents {
+  align-self: start;
+  grid-column-start: 1;
+  grid-column-end: 4;
+  justify-self: end;
+  padding-right: 3em;
+  padding-left: 2em;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: rgba(0, 0, 0, 0.1);
+}
+}
+
+@media (min-width: 1180px) {
+d-contents {
+  grid-column-start: 1;
+  grid-column-end: 4;
+  justify-self: end;
+  padding-right: 3em;
+  padding-left: 2em;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: rgba(0, 0, 0, 0.1);
+}
+}
+
+d-contents nav h3 {
+margin-top: 0;
+margin-bottom: 1em;
+}
+
+d-contents nav a {
+color: rgba(0, 0, 0, 0.8);
+border-bottom: none;
+text-decoration: none;
+}
+
+d-contents li {
+list-style-type: none;
+}
+
+d-contents ul {
+padding-left: 1em;
+}
+
+d-contents nav ul li {
+margin-bottom: 0.25em;
+}
+
+d-contents nav a:hover {
+text-decoration: underline solid rgba(0, 0, 0, 0.6);
+}
+
+d-contents nav ul {
+margin-top: 0;
+margin-bottom: 6px;
+}
+
+d-contents nav > div {
+display: block;
+outline: none;
+margin-bottom: 0.5em;
+}
+
+d-contents nav > div > a {
+font-size: 13px;
+font-weight: 600;
+}
+
+d-contents nav > div > a:hover, d-contents nav > ul > li > a:hover {
+text-decoration: none;
+}
+
+input[type="radio"] {
+vertical-align: unset !important;
+}
+
+.math-details {
+padding-left: 1em;
+padding-right: 1em;
+padding-bottom: 0em;
+padding-top: 1em;
+margin-bottom: 1em;
+}
+
+.mycenter > .katex{
+  text-align: center;
+  width: 100%;
+}
+
+span.katex{
+  text-align: center;
+  width: 100%;
+  color:red!important;
+}
+
+.math-details{
+  padding-bottom: 1em!important;
+}
+</style>
+<body>
+  <distill-header></distill-header>
+  <d-front-matter>
+    <script id='distill-front-matter' type="text/json">{
+    "title": "Refining Minimax Regret for Unsupervised Environment Design",
+    "description": "Combining evolution with regret-based curricula to produce highly robust agents.",
+    "published": "April 9, 2024",
+    "doi": "2402.12284",
+    "authors": [
+      {
+        "author":"Michael Beukman<sup>*</sup>",
+        "authorURL":"https://twitter.com/mbeukman",
+        "affiliations": [
+          {"name": "Oxford University", "url":"https://foersterlab.com/"}]
+      },
+      {
+        "author":"Samuel Coward<sup>*</sup>",
+        "authorURL":"https://twitter.com/scoward",
+        "affiliations": [
+          {"name": "Oxford University", "url":"https://foersterlab.com/"}]
+      },
+      {
+        "author":"Michael Matthews",
+        "authorURL":"",
+        "affiliations": [
+          {"name": "Oxford University", "url":"https://foersterlab.com/"}]
+      },
+      {
+        "author":"Mattie Fellows",
+        "authorURL":"",
+        "affiliations": [
+          {"name": "Oxford University", "url":"https://foersterlab.com/"}]
+      },
+      {
+        "author":"Minqi Jiang",
+        "authorURL":"https://twitter.com/minqijiang",
+        "affiliations": [
+          {"name": "UCL", "url": "https://dark.cs.ucl.ac.uk/"}]
+      },
+      {
+        "author":"Michael Dennis",
+        "authorURL":"https://twitter.com/MichaelD1729",
+        "affiliations": [
+          {"name": "UC Berkeley", "url": "https://humancompatible.ai/people#people"}
+        ]
+      },
+      {
+        "author":"Jakob Foerster",
+        "authorURL":"https://twitter.com/j_foerst/",
+        "affiliations": [
+          {"name": "Oxford University", "url":"https://foersterlab.com/"}]
+      }
+    ],
+    "katex": {
+      "delimiters": [
+      {"left": "$", "right": "$", "display": false},
+      {"left": "$$", "right": "$$", "display": true}
+      ]
+    }
+    
+  }</script>
+  
+  <!-- {"left": "$", "right": "$", "display": false}, -->
+  </d-front-matter>
+
+  <d-title>
+    <!-- <figure style="grid-column: page; margin: 1rem 0;"><img src="momentum.png"
+        style="width:100%; border: 1px solid rgba(0, 0, 0, 0.2);" /></figure> -->
+    <p>When Minimax Regret UED causes learning to stagnate and what to do about it.</p>
+  </d-title>
+  <d-byline></d-byline>
+  
+  <d-article>
+    <d-contents>
+      <nav class="l-text figcaption">
+        <h3>Contents</h3>
+        <div><a href="#introduction">Introduction</a></div>
+        <div><a href="#background">Background</a></div>
+        <div><a href="#limits">The Limits of Minimax Regret</a></div>
+        <div><a href="#refining">Refining Minimax Regret</a></div>
+        <ul>
+          <li><a href="#algo">Algorithm</a></li>
+        </ul>
+        <div><a href="#experiments">Experiments</a></div>
+        <ul>
+          <li><a href="#exp-exact">Exact Settings</a></li>
+          <li><a href="#exp-minigrid">Minigrid</a></li>
+          <li><a href="#exp-level">Lever</a></li>
+          <li><a href="#summary">Summary</a></li>
+        </ul>
+        <!-- <div><a href="#discussion">Discussion</a></div> -->
+        <div><a href="#conclusion">Conclusion</a></div>
+      </nav>
+    </d-contents>
+  <div><h2 id="introduction">Introduction - What is UED?</h2>
+        <p>Unsupervised Environment Design (UED) is a paradigm where an adversary generates environment configurations for a reinforcement learning (RL) agent to learn on. 
+        This adversary generally chooses levels in order to maximise some objective function; one common objective&mdash;and the one we deal with in this work&mdash;is to maximise the agent's regret, which is the difference between the performance of the optimal policy on that level and that of the agent.</p>
+        
+        <figure style="width: 90%; text-align: center;">
+            <img src="assets/ued-overview.svg">
+            <figcaption>Illustrating the general process behind regret-based UED. An adversary generates a level, the agent interacts with it, and the adversary updates itself based on the agent's <em>regret</em>.
+              Taken with permission from <a href="https://accelagent.github.io">here</a> <d-cite key="jiang2021Replayguided,holder2022Evolving"></d-cite></figcaption>
+        </figure>
+
+        <p>
+        In other words, regret measures how much better a particular agent could perform on a particular level. Empirically, training on these regret-maximising levels has been shown to improve generalisation to out-of-distribution levels in challenging domains <d-cite key="dennis2020Emergent,jiang2021Replayguided, holder2022Evolving,samvelyan2023Maestro,team2023Humantimescale"></d-cite>. At equilibrium, UED methods theoretically result in a <em>minimax regret policy</em><d-cite key="dennis2020Emergent,jiang2021Replayguided"></d-cite>, meaning that there is no other policy that has lower worst-case regret. This confers a certain degree of robustness, as it provides an upper bound on the worst-case performance gap.
+
+
+        Minimax regret (MMR) works well when the agent can simultaneously perform optimally on all levels: at convergence, the MMR policy would achieve zero regret for each level. However, this is not always possible in partially observable environments. 
+      </p>
+      <p>
+        Consider the following example, where an adversary can sample T-mazes and normal mazes. In the T-mazes, the reward for reaching the goal is $1.0$ and $-1.0$ for failing. The reward for the mazes is $0.9$ for reaching the goal, and zero otherwise. Each T-maze looks identical from the agent's perspective, and its minimax regret behaviour is to go left or right with 50% probability. See <a href="#two-player-game">this section</a> for a derivation of this solution.
+      </p>
+
+      <p>
+        There are two policies in the following video. Both of these have the same worst-case regret (1.0) in the T-mazes, achieved by randomly choosing left or right. However, policy 1 is effectively random in the maze, whereas policy 2 actually goes to the goal. Both of these are minimax regret policies, but policy 2 is clearly better.
+        Using standard UED cannot guarantee that we won't get stuck with policy 1, even though policy 2 is possible! In general, there may be multiple minimax regret policies, and we aren't guaranteed to get the "best" one when using minimax regret.
+      </p>
+        
+        
+
+        <!-- <div style="width:100%; display:flex; flex-direction: row; gap: 10%">
+          <div style="width: 45%; text-align: center;">
+            Policy 1
+            <br>
+            <div style="width:49%; display: inline-block;">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/tmaze_left.mp4" type="video/mp4" >
+              </video>
+              Regret: 1.0
+            </div>
+            <div style="width:49%; display: inline-block">
+            <video controls autoplay muted loop style="width: 100%">
+              <source src="assets/tmaze_right.mp4" type="video/mp4" >
+            </video>
+            Regret: 1.0
+            </div>
+            <br>
+            <div style="width:49%; display: inline-block">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/maze_spin_0.mp4" type="video/mp4" >
+              </video>
+              Regret: 0.9
+            </div>
+            <div style="width:49%; display: inline-block">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/maze_spin_0.mp4" type="video/mp4" >
+              </video>
+              Regret: 0.9
+            </div>
+          </div>
+          
+          <div style="width: 45%; text-align: center;">
+            Policy 2
+            <br>
+            <div style="width:49%; display: inline-block;">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/tmaze_left.mp4" type="video/mp4" >
+              </video>
+              Regret: 1.0
+            </div>
+            <div style="width:49%; display: inline-block">
+            <video controls autoplay muted loop style="width: 100%">
+              <source src="assets/tmaze_right.mp4" type="video/mp4" >
+            </video>
+            Regret: 1.0
+            </div>
+            <br>
+            <div style="width:49%; display: inline-block">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/maze_good_0.mp4" type="video/mp4" >
+              </video>
+              Regret: 0.0
+            </div>
+            <div style="width:49%; display: inline-block">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/maze_good_0.mp4" type="video/mp4" >
+              </video>
+              Regret: 0.0
+            </div>
+          </div>
+        </div> -->
+
+
+        <div style="width:100%; display:flex; flex-direction: row; gap: 10%">
+          <div style="width: 45%; text-align: center;">
+            Policy 1
+            <br>
+            <div style="width:31%; display: inline-block;">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/tmaze_left.mp4" type="video/mp4" >
+              </video>
+              Regret: 1.0
+            </div>
+            <div style="width:31%; display: inline-block">
+            <video controls autoplay muted loop style="width: 100%">
+              <source src="assets/tmaze_right.mp4" type="video/mp4" >
+            </video>
+            Regret: 1.0
+            </div>
+            <div style="width:31%; display: inline-block">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/maze_spin_0.mp4" type="video/mp4" >
+              </video>
+              Regret: 0.9
+            </div>
+          </div>
+          
+          <div style="width: 45%; text-align: center;">
+            Policy 2
+            <br>
+            <div style="width:31%; display: inline-block;">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/tmaze_left.mp4" type="video/mp4" >
+              </video>
+              Regret: 1.0
+            </div>
+            <div style="width:31%; display: inline-block">
+            <video controls autoplay muted loop style="width: 100%">
+              <source src="assets/tmaze_right.mp4" type="video/mp4" >
+            </video>
+            Regret: 1.0
+            </div>
+            <div style="width:31%; display: inline-block">
+              <video controls autoplay muted loop style="width: 100%">
+                <source src="assets/maze_good_0.mp4" type="video/mp4" >
+              </video>
+              Regret: 0.0
+            </div>
+          </div>
+        </div>
+
+        <br>
+        <p>
+          The rest of this post <a href="#limits">describes this problem in more detail</a>, <a href="#refining">proposes a solution</a> and <a href="#experiments">demonstrates the effectiveness of this solution</a> in a variety of environments. See the full paper for more details and proofs of theoretical results.
+        </p>
+  </div>
+  
+  <div>
+    <h2 id="background">Background</h2>
+    <h3 id="UPOMDP">RL &amp; UPOMDPs</h3>
+      We consider an underspecified partially-observable Markov decison process (UPOMDP) <d-cite key="dennis2020Emergent"></d-cite> $\mathcal{M} = \langle A, O, \Theta, S, P_S, P_O, \mathcal{R}, \gamma \rangle$. 
+      Here $A$ is the action space, $O$ is the observation space, and $S$ is the state space. $\Theta$ is the space of underspecified parameters commonly referred to as <em>levels</em>, $P_S: S \times A \times \Theta \to \Delta(S)$<d-footnote>$\Delta(X)$ is the set of all probability distributions over the set $X$.</d-footnote> is the level-conditional transition distribution. We denote the initial state distribution as $P_0:\Theta \to \Delta(S)$. In the partially observable setting, the agent does not directly observe the state, but an observation variable $o\in O$ that is correlated to the underlying state. $\mathcal{R}:S\times A\rightarrow \mathbb{R}$ is the scalar reward function, we denote instances of reward at time $t$ as $r_t=\mathcal{R}(s_t,a_t)$ and $\gamma$ is the discount factor. Each set of underspecified parameters $\theta \in \Theta$ indexes a particular POMDP called a <em>level</em>. In our maze example above, the level determines the location of the goal and obstacles but dynamics such as navigating and the reward function remain shared across all levels.
+
+      At time $t$ the agent observes an action-observation history (or trajectory) $\tau_t=\langle o_0, a_0, ..., o_{t-1}, a_{t-1}, o_t \rangle$ and chooses an action according to a trajectory-conditioned policy $a_t\sim \pi(\tau_t)$. We denote the set of all trajectory-conditioned policies as $\Pi\dot = \{\pi\vert \pi:\mathcal{T}\rightarrow\Delta(A)\}$ where $\mathcal{T}$ denotes the set of all possible trajectories. 
+      For any level $\theta$, the agent's goal is to maximise the expected discounted return (called <em>utility</em>), which we denote as:
+      <d-math block style=" width: 100%;">U_\theta(\pi)\dot = \mathbb{E}_{\pi,\theta}[ \sum_{t=0}^T \gamma^t r_t ],</d-math>
+      where $\mathbb{E}_{\pi,\theta}$ denotes the expected value on $\theta$ if the agent follows policy $\pi$ <d-cite key="sutton2018reinforcement"></d-cite>.
+      We denote an optimal policy for level $\theta$ as $\pi^\star_\theta\in \argmax_{\pi'} U_\theta(\pi')$. 
+
+      <h3 id="UED">Unsupervised Environment Design</h3>
+      Unsupervised Environment Design (UED) is posed as a two-player game, where an adversary $\Lambda$ selects levels $\theta$ for an agent $\pi$ to train on<d-cite key="dennis2020Emergent"></d-cite>. The adversary's goal is to choose levels that maximise some utility function, e.g., a constant utility for each level corresponds to domain randomisation<d-cite key="tobin2017Domain"></d-cite>. 
+      One commonly-used objective is to maximise the agent's regret<d-cite key="savage1951Theory,Bell82,Loomes82"></d-cite>. Formally, the <em>regret</em> of policy $\pi$ with respect to an optimal policy $\pi_\theta^\star$ on a level $\theta$ is equal to how much better $\pi_\theta^\star$ performs than $\pi$ on $\theta$, $\text{Regret}_\theta(\pi) \dot = U_\theta(\pi_\theta^\star) - U_\theta(\pi)$.
+
+      If regret is used as the payoff, at equilibrium of this two-player zero-sum game, the policy satisfies minimax regret<d-cite key="dennis2020Emergent"></d-cite>:
+      </div>
+      <d-math block class="mycenter">\pi_\text{MMR} \in \Pi^\star_\text{MMR}\dot = \argmin_{\pi} \{\max_{\theta \in \Theta} \{ \text{Regret}_\theta(\pi) \} \}.</d-math>
+      <div>
+
+      Constraining policies to the set of MMR policies $\Pi^\star_\text{MMR}$ has several advantages: when deploying our policy, our regret can never be higher than the minimax regret bound, so the policy has a certain degree of robustness to the set of levels we train on. Using minimax regret also results in an adaptive curriculum that increases in complexity over time, leading to the agent learning more efficiently<d-cite key="dennis2020Emergent,holder2022Evolving"></d-cite>.
+
+      Further, choosing levels based on maximising regret avoids sampling levels that are too easy (as the agent already performs well on these) or impossible (where the optimal policy also does poorly). This is in contrast to standard minimax, which tends to choose impossible levels that minimise the agent's performance<d-cite key="pinto2017Robust,dennis2020Emergent"></d-cite>.
+
+      One problem with MMR is that, since regret computation requires access to the optimal policy, regret must in practice be approximated. A more serious issue with using minimax regret in isolation is that there is no formal method to choose between policies in $\Pi^\star_\text{MMR}$. Typically it is chance and initialisation that determines the policy an algorithm converges to. <strong>While all minimax regret policies protect against the highest-regret outcomes, these events may be rare and there may be significant differences in the utility of policies in $\Pi^\star_\text{MMR}$ in more commonly encountered levels.</strong>
+
+      <h3 id="two-player-game">Two-Player Game Formulation of UED</h3>
+        <p>
+          In UED, it can be helpful to think of the problem as a two-player zero sum matrix game. Concretely, the adversary's strategy set is $\Theta$, the set of all levels. The agent's strategy set is $\Pi$, the set of all policies. For a particular $\langle \theta, \pi \rangle$, the payoff (which the adversary aims to maximise and the agent seeks to minimise) is the regret of $\pi$ on $\theta$: $\text{Regret}_\theta(\pi)$.
+          The equilibrium of UED is when the adversary selects a level and the agent chooses a particular policy, such that neither can improve their payoff by only changing their strategy. We note that equilibria may consist of mixed strategies, i.e., probability distributions over the strategy set. In this way, the adversary can end up sampling a distribution of levels, and the policy can stochastically chooses behaviour.
+        </p>
+
+        <p>
+          As a concrete example, let's calculate the equilibrium in the T-Maze example. We do this by explicitly constructing the decision matrix for the T-mazes. The table on the left illustrates the reward for each action in each environment, whereas the right table shows the regret. UED treats this as the payoff matrix for a two-player zero-sum game, where the agent chooses a column, and the adversary chooses a row. Since this game is similar to <a href="https://en.wikipedia.org/wiki/Matching_pennies">matching pennies</a>, the equilibrium is for the agent to choose left or right with 50% probability, and the adversary to choose each environment with 50% probability. This results in a worst-case regret of 1.0, which is the best we can do in this environment.
+          <figure>
+          <div style="width: 45%;  display:inline-block">
+            <table class="table" id="table:tmaze" style="margin:auto">
+              <thead>
+                <tr>
+                  <th scope="col"></th>
+                  <!-- <th scope="col">Works With Unsolvable Environments</th>
+                  <th scope="col">Works With Irreducible Regret</th> -->
+                  <th scope="col">Move Left</th>
+                  <th scope="col">Move Right</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Goal on Left</td>
+                  <td>+1</td>
+                  <td>-1</td>
+                </tr>
+                <tr>
+                  <td>Goal on Right</td>
+                  <td>-1</td>
+                  <td>+1</td>
+                </tr>
+                
+              </tbody>
+            </table>
+          <figcaption style="text-align:center">Reward for each action in each T-Maze environment</figcaption>
+        </div>
+        <div style="width: 45%; display:inline-block">
+          <table class="table" id="table:regret" style="margin:auto">
+            <thead>
+              <tr>
+                <th scope="col"></th>
+                <!-- <th scope="col">Works With Unsolvable Environments</th>
+                <th scope="col">Works With Irreducible Regret</th> -->
+                <th scope="col">Move Left</th>
+                <th scope="col">Move Right</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Goal on Left</td>
+                <td>0</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>Goal on Right</td>
+                <td>2</td>
+                <td>0</td>
+              </tr>
+              
+            </tbody>
+          </table>
+        <figcaption style="text-align:center">Regret for each action in each T-Maze environment</figcaption>
+      </div>
+        </figure>
+        </p>
+
+  </div>
+  <h2 id="limits">The Limits of Minimax Regret</h2>
+    <p>
+    To elucidate the issues with using minimax regret in isolation, we analyse the set of minimax regret policies $\pi^\star_\text{MMR}$. For any $\pi_\text{MMR}\in \Pi^\star_\text{MMR}$ and $\vartheta \in \Theta$, it trivially holds that: 
+    <div style="text-align: center; width: 100%;">
+      <d-math block style=" width: 100%;">
+        \text{Regret}_\vartheta(\pi_\text{MMR}) \le \min_{\pi'} \left\{\max_{\theta \in \Theta} \left\{{\text{Regret}_\theta(\pi')} \right\}\right\}.
+      </d-math>
+    </div>
+    </p>
+
+
+
+    <p>
+    However, it is unclear whether all policies in $\Pi^\star_\text{MMR}$ are equally desirable across all levels. 
+    In the worst case, the minimax-regret game will converge to an agent policy that only performs as well as this bound, <em>even if further improvement is possible</em> on other (non-minimax regret) levels. In addition, the adversary's distribution will not change at such Nash equilibria, by definition. Thus, at equilibrium the agent will not be presented with levels outside the support of $\Lambda$ and as such will not have the opportunity to improve further---despite the possible existence of other MMR policies with lower regret outside the support of $\Lambda$.
+    </p>
+    
+    <p>
+      The following figure illustrates this problem: Minimax regret only guarantees that all levels have regret equal to or lower than the best worst-case regret, even if a lower regret is possible (e.g. on the right).
+      <div style="text-align: center;">
+        <figure style="width: 90%;">
+          <div style="width:45%; display: inline-block;" ><img src="assets/regretgap_simpler_a.svg" style="width:100%;" /><figcaption>Minimax Regret only guarantees this bound,</figcaption></div>
+          <div style="width:45%; display: inline-block; float:right" ><img src="assets/regretgap_simpler_b.svg" style="width:100%;" /><figcaption>Even if a lower regret is possible on other levels!</figcaption></div>
+        </figure>
+      </div>
+    </p>
+
+    <p>
+    This observation demonstrates that minimax regret does not always correspond to <em>learnability</em>: there could exist UPOMDPs with high regret on a subset of levels on which an agent is optimal (given the partial observability constraints), and low regret on levels in which it can still improve. <em>Our key insight is that optimising solely for minimax regret can result in the agent's learning to stop prematurely, preventing further improvement across levels outside the support of MMR levels</em>. We summarise this <em>regret stagnation problem</em> of minimax regret as follows:
+    <ul>
+        <li>The minimax regret game is indifferent to which MMR policy is achieved on convergence</li>
+        <li>Upon convergence to a policy in $\Pi^\star_\text{MMR}$, no improvements occur on levels outside the support of $\Lambda$.</li>
+    </ul>
+  </p>
+  <div>
+  <h2 id="refining">Refining Minimax Regret</h2>
+    Now, how do we fix this? Loosely, our idea is that we want to get a minimax regret policy and improve it. The improvement should be done in such a way that we do not lose minimax regret guarantees on the existing MMR levels. We can do this by restricting our new policy to act in exactly the same way as the MMR policy in all trajectories that can be seen using $\pi$ and $\Lambda$.
+
+    We first define the notion of a realisable trajectory, which is necessary to understand the rest of this section.
+    <div class="math-details shaded-figure">
+      <b>Realisable Trajectories</b><br>
+      For a set $\Theta'$ and policy $\pi$, $\mathcal{T}_{\pi}(\Theta')$ denotes the set of all trajectories that are possible by following $\pi$ on any $\theta \in \Theta'$. We call a trajectory $\tau$ realisable under $\pi$ and $\Theta'$ iff $\tau \in \mathcal{T}_{\pi}(\Theta')$. I.e., $\mathcal{T}_{\pi}(\Theta')$ is the set of all trajectories that have nonzero probability given a set $\Theta'$ and a policy $\pi$.
+    </div>
+    
+    We next introduce the refined minimax regret game:
+    <div class="math-details shaded-figure">
+      <b>Refined Minimax Regret Game</b><br>
+      Given a UPOMDP with level space $\Theta$, suppose we have some policy $\pi$ and some subset of levels  $\Theta' \subseteq \Theta$. 
+      We introduce the <b>refined minimax regret game under $\pi$ and $\Theta'$</b>, a two-player zero-sum game between an agent and adversary where:
+      <ul>
+          <li> the agent's strategy set is all policies of the form   <d-math>
+            \pi'(a | \tau) = \begin{cases}
+                \pi(a | \tau) \text{ if } \tau \in \mathcal{T}_{\pi}(\Theta') \\
+                \bar{\pi}(a | \tau) \text{ otherwise}\end{cases}
+            </d-math><br>
+          where $\bar{\pi}$ is an arbitrary policy; </li>
+          <li> the adversary's strategy set is $\overline{\Theta} \dot = \Theta \setminus \Theta'$;</li>
+          <li> the adversary's payoff is $\text{Regret}_\theta(\pi')$.</li>
+      </ul>
+      In other words, $\pi'$ represents the set of policies that perform identically to $\pi$ in any trajectory possible under $\pi$ and $\Theta'$.
+      At Nash equilibrium, the agent will converge to a policy that performs identically to $\pi$ under all levels in $\Theta'$ (by definition), but otherwise will perform minimax regret optimally over $\overline{\Theta}$ with respect to these constraints. The adversary will converge onto a minimax regret equilibrium distribution with support only on levels in $\overline{\Theta}$.
+    </div>
+
+    <p>
+      This refined game is quite powerful, and it allows us to fix a policy's behaviour over a set of levels, and improve its worst-case regret in non-highest-regret levels!
+    </p>
+
+    <p>We next present a few important theoretical results regarding the refined game, and the proofs can be found in the full paper.</p>
+    <div class="math-details shaded-figure">
+      <b>Improving Non-Worst-Case Regret</b><br>
+      Suppose we have a UPOMDP with level space $\Theta$. Let $\pi$ be some policy and $\Theta' \subseteq \Theta$ be some subset of levels. Let $(\pi', \Lambda')$ denote a policy and adversary at Nash equilibrium for the refined minimax regret game under $\pi$ and $\Theta'$. Then, (a) for all $\theta \in \Theta'$,
+      $\text{Regret}_\theta(\pi') = \text{Regret}_\theta(\pi))$; and (b) we have,
+      <d-math block>
+        \max_{\theta \in \Theta \setminus \Theta'} \left\{\text{Regret}_\theta(\pi')\right\} \le \max_{\theta \in \Theta \setminus \Theta'} \left\{\text{Regret}_\theta(\pi))\right\}.
+      </d-math>
+
+      This intuitively states that the Nash solution of the refined minimax regret game retains the regret of $\pi$ on $\Theta'$, and monotonically improves worst-case regret on the $\Theta \setminus \Theta'$.
+    </div>
+
+    <div class="math-details shaded-figure">
+        <b>Minimax Refinement Theorem</b><br>
+        Let $\langle \pi_1$, $\Lambda_1 \rangle$ be in Nash equilibrium of the minimax regret game.
+        Let $\langle \pi_i, \Lambda_i \rangle$ with $1 < i$ denote the Nash equilibrium solution to the refined minimax regret game under $\pi_{i-1}$ and $\Theta_i' = \bigcup_{j = 1}^{i-1} \text{Supp}(\Lambda_j)$. <d-footnote>$\text{Supp}(\Lambda_j)$ denotes the support of $\Lambda$, i.e., all environments that it samples with nonzero probability.</d-footnote>
+        <br>
+        Then, for all $i \geq 1$, (a) $\pi_{i}$ is minimax regret and (b) we have
+        <d-math block>
+            \max_{\theta \in \Theta \setminus \Theta_i'} \left\{\text{Regret}_\theta(\pi_{i})\right\} \le \max_{\theta \in \Theta \setminus \Theta_i'} \left\{\text{Regret}_\theta(\pi_{i-1}))\right\}.
+        </d-math>
+        Finally, (c) for all $1 \leq j < i$ and $\theta \in \text{Supp}(\Lambda_j)$, $\text{Regret}_\theta(\pi_i) = \text{Regret}_\theta(\pi_j)$.
+
+        <br><br>
+        In other words, iteratively refining a minimax regret policy (a) retains minimax regret guarantees; (b) monotonically improves worst-case regret on the set of levels not already sampled by any adversary; and (c) retains regret of previous refinements on previous adversaries.
+    </div>
+
+    With all this out of the way, we can state our overall objective, the BLP:
+    <div class="math-details shaded-figure">
+      <b>Bayesian Level-Perfect Minimax Regret Policy</b><br>
+      Let $\langle \pi_1, \Lambda_1 \rangle$ be in Nash equilibrium of the minimax regret game.
+      Let $\langle \pi_i, \Lambda_i \rangle$, $1 < i$ denote the solution to the refined game under $\pi_{i-1}$ and $\bigcup_{j = 1}^{i-1} \text{Supp}(\Lambda_j)$.
+
+      Policy $\pi_j$ is a <em>Bayesian level-perfect minimax regret policy</em> if $\bigcup_{k=1}^{j} \text{Supp}(\Lambda_k) = \Theta$.
+    </div>
+
+    Intuitively, this is saying that we first want the policy to be minimax regret. Given this constraint, we want to choose the policy that has lowest worst-case regret over all environments that are distinguishable from the MMR levels. We iterate this process until we have considered all levels.
+
+  <h3  id='algo'>Algorithm</h3>
+    <p>
+      Now, all of this was quite abstract. So what does this actually do? Well, the core idea is that we want to always keep minimax regret guarantees. The way we do this is to fix the policy's behaviour on all trajectories realisable under an MMR policy and adversary. We then improve the policy's worst-case regret on all other levels by solving the refined game. We repeat this process until we have considered all levels.
+    </p>
+    <p>To demonstrate the benefit of this solution concept, we develop a proof-of-concept algorithm that results in a BLP policy at convergence. We call this algorithm <span style="font-weight: bold;">Re</span>fining <span style="font-weight: bold;">Mi</span>nimax Regret <b>Di</b>stributions, or ReMiDi for short.
+    This algorithm is a direct implementation of the solution concept above, and explicitly maintains a set of adversaries and policies. In practice, though, we only have one policy, and we restrict its updates to only occur on trajectories that are inconsistent with any previous adversary.
+
+      <div style="text-align: center;">
+        <figure style="width: 90%;">
+          <img src="assets/alg.png" style="width:50%; border: 1px solid rgba(0, 0, 0, 0.2);" />
+          <figcaption>The ReMiDi Algorithm</figcaption>
+        </figure>
+      </div>
+    </p>
+    
+    <p>
+      The following figures illustrate what applying our method does, iteratively filling in behaviour for all non-previously sampled levels.
+    </p>
+    <figure style="width: 100%; text-align: center;">
+    <!-- <div style="width:49%; display: inline-block; text-align: center;"> -->
+      <video controls autoplay muted loop style="width: 50%">
+        <source src="assets/tree_anim.webm" type="video/mp4" >
+      </video>
+      <figcaption>Here we show the iterative process of ReMiDi. First, we obtain a minimax regret policy, and all trajectories reachable under the MMR adversary and policy are coloured in <span style="color:blue">blue</span>. Thereafter, we solve a constrained MMR game, where the adversary cannot choose $\theta_1$ or $\theta_2$, and the policy must act according to $\pi_1$ whenever it is in a blue trajectory. This allows us to fill in the red behaviour, which improves upon the MMR policy's second-worst-case regret. This is repeated again with $\theta_4$.</figcaption>
+    <!-- </div> -->
+  </figure>
+  
+  <!-- <div style="text-align: center;">
+    <figure style="width: 100%; text-align: center;">
+      <img src="assets/big_tree_2_bayes_v6.svg" style="width:40%;" />
+  </figure>
+  </div> -->
+  <div style="text-align: center;">
+    <figure style="width: 90%;">
+      <div style="width:56%; display: inline-block;" ><img src="assets/regretgap8.png" style="width:100%;" /><figcaption>Showing how the regret bound of all non-chosen levels decreases at every refinement iteration</figcaption></div>
+      <div style="width:37%; display: inline-block; float:right" ><img src="assets/vennv5.svg" style="width:100%;" /><figcaption>Illustrating how iterative refinement results in a smaller set of policies.</figcaption></div>
+    </figure>
+  </div>
+
+    
+  </div>
+  <div>
+  <h2 id="experiments">Experiments</h2>
+    
+      <p>We perform several experiments in domains that exhibit irreducible regret and show that ReMiDi alleviates this problem.
+        Our experimental setup for the non-exact settings is as follows.
+
+      We compare against Robust PLR ($\text{PLR}^\perp$) <d-cite key="jiang2021Replayguided"></d-cite>, which is based on curating randomly-generated levels into a buffer of high-regret levels. At every step the agent is either trained on a sample of levels from the buffer, or evaluated on a set of randomly-generated levels. These randomly generated levels replace existing levels in the buffer that have lower regret scores. In robust PLR, the agent does not train on randomly generated levels.
+      Our ReMiDi implementation maintains multiple $\text{PLR}^\perp$ buffers, and we perform standard $\text{PLR}^\perp$ on the first buffer for a certain number of iterations. 
+      We then perform $\text{PLR}^\perp$ again, but reject levels that have complete trajectory overlap with levels in a previous buffer. 
+      Instead of explicitly maintaining multiple policies, we have a single policy that we update only on the parts of trajectories that are distinguishable from levels in previous buffers, approximately maintaining performance on previous adversaries.
+      Finally, ReMiDi assumes knowledge of whether a trajectory is possible given a policy and a set of levels, which we can compute exactly in each environment.
+      
+      </p>
+      <h3 id='exp-exact'>Exact Settings</h3>
+        We consider a one-step tabular game, where we have a set of $N$ levels $\theta_1, ..., \theta_N$. Each level $i$ corresponds to a particular initial observation $\tau_i$, such that the same observation may be shared by two different environments. Each level also has an associated reward for each action $a_j, 1 \leq j \leq M$. 
+
+
+        We model the adversary as a $N$-arm bandit, implemented using tabular Actor-Critic<d-cite key="sutton2018reinforcement"></d-cite>. Each of its actions corresponds to a different level $\theta_i$. 
+        In our ReMiDi implementation, we have a sequence of adversaries, each selecting levels where the observations are disjoint with any previous adversary. 
+        In both cases, the agent is also a tabular Actor-Critic policy, with different action choices for each observation (equivalent to a trajectory) $\tau$.
+        <h4>When Minimax Regret is Sufficient</h4>
+          <figure style="text-align: center;"><img style="width:50%" src="assets/toy_results/ued_works_standard_ued.pdf.jpg"/>
+            <figcaption>Regret</figcaption>
+          </figure>
+          In the above figure, we first consider a case where minimax regret has none of the problems we discussed earlier. Here, each $\theta$ has a unique initial observation $\tau$, thus the level can be deduced solely from this observation. Minimax regret succeeds and converges to the globally optimal policy. Convergence occurs because a single policy can be simultaneously optimal over the set $\Theta$, as for every observation, there is one optimal action. The MMR policy is therefore also unique.
+        
+        <h4>When Minimax Regret Fails</h4>
+        <p>We next examine a UPOMDP where a single policy can no longer be simultaneously optimal over all levels. The setup is the same as the previous experiment, except that $\tau_2 = \tau_1$, $\tau_4 = \tau_3$, etc., meaning that there is some irreducible regret.
+        The figure below shows that regret-based UED rapidly obtains minimax regret, but fails to obtain optimal regret on the non-regret-maximising levels. By contrast, ReMiDi obtains optimal regret on all levels. 
+        It does this by first obtaining global minimax regret, at which point it restricts its search over levels to those that are distinguishable from minimax regret levels. Since the agent's policy is not updated on these prior states, it does not lose MMR guarantees.</p>
+
+          <div style="text-align: center;">
+            <figure style="width: 99%;">
+              <div style="width:70%; display: inline-block;" ><img src="assets/toy_results/ued_fails_both_regret.pdf.jpg"/><figcaption>Regret</figcaption></div>
+            </figure>
+          </div>
+
+          <p>We analyse this further by plotting the probability of each level being sampled over time. Regret-based UED rapidly converges to sampling only the highest-regret levels ($\theta_4$ and $\theta_5$), and shifts the probability of sampling the other levels to zero. By contrast, our multi-step process first samples these high-regret levels exclusively. Thereafter, these are removed from the adversary's options and it places support on all other levels.
+          This shows that, while we could improve the performance of regret-based UED by adding stronger entropy regularisation<d-cite key="mediratta2023Stabilizing"></d-cite>, or making the adversary learn slower, the core limitation remains: when regret does not correspond to learnability, minimax regret UED will sample inefficiently.</p>
+          <div style="text-align: center;">
+            <figure style="width: 99%;">
+              <div style="width:70%; display: inline-block;" ><img src="assets/toy_results/ued_fails_both_prob.pdf.jpg"/><figcaption>Prob</figcaption></div>
+            </figure>
+          </div>
+      <h3 id='exp-minigrid'>T-Maze &amp; Blindfold</h3>
+        We next consider the T-Maze example discussed earlier. Here the adversary can sample T-mazes or normal mazes. The reward of T-mazes is $+1$ or $-1$ depending on whether the agent reaches the goal or not, and the standard maze reward is the same as is used in prior work <d-cite key="dennis2020Emergent,jiang2021Replayguided"></d-cite>
+        Our second Maze experiment is where the adversary has the choice of blindfolding the agent; in other words, it can zero out the agent's observation.
+        In both cases, we evaluate on a standard set of held-out mazes.
+
+        The following results show that $\text{PLR}^\perp$ with perfect regret as its score function results in poor performance on actual mazes, in both the T-maze and blindfold experiments. The reason for this is that it almost trains exclusively on non-normal-mazes. ReMiDi, by contrast, samples T-mazes initially, and thereafter does not, as they have identical observations with previous MMR levels. This results in better performance on actual mazes.
+        <div style="text-align: center;">
+          <figure style="width: 99%;">
+            <div style="width:49%; display: inline-block;" ><img src="assets/maze_results/tmaze_v21.pdf.jpg"/><figcaption>TMaze</figcaption></div>
+            <div style="width:49%; display: inline-block;" ><img src="assets/maze_results/blind_v21.pdf.jpg"/><figcaption>Blind</figcaption></div>
+          </figure>
+        </div>
+
+        As mentioned, here we show the probability of sampling each type of maze, and $\text{PLR}^\perp$ samples primarily high-irreducible regret levels where the agent can learn nothing more on.
+        
+
+        <div style="text-align: center;">
+          <figure style="width: 99%;">
+            <div style="width:49%; display: inline-block;" ><img src="assets/maze_results/tmaze_proportion.pdf.jpg"/><figcaption>TMaze</figcaption></div>
+            <div style="width:49%; display: inline-block;" ><img src="assets/maze_results/blind_proportion.pdf.jpg"/><figcaption>Blind</figcaption></div>
+          </figure>
+        </div>
+
+      <h3  id='exp-lever'>Lever Game</h3>
+        <p>In this environment, inspired by <d-cite key="hu2020Otherplay"></d-cite>, there are $64$ levers to pull, one of which is correct (reward of $+1$), and pulling a wrong lever results in a reward of $-1$. The adversary can make the correct lever known or unknown to the agent. In the latter case, the reward is multiplied by 10 (to simulate a harder problem having a higher reward).
+        Our analysis above suggests that regret-based UED should solely sample environments where the correct answer is not known, and the best option for the agent is to guess randomly (because this induces irreducible regret). Training solely on these levels, however, would cause the agent to perform poorly when it observes the correct answer.
+        Indeed, the following figures show that on levels where the correct lever is not given, $\text{PLR}^\perp$ performs the same as ReMiDi. On levels where the correct answer is given, however, ReMiDi performs perfectly, but $\text{PLR}^\perp$ fails as it nearly never trained on these types of levels. 
+        Importantly, this result shows that both $\text{PLR}^\perp$ and ReMiDi satisfy minimax regret, but $\text{PLR}^\perp$ results in a policy that is effectively random, whereas ReMiDi learns a much more useful policy.</p>
+        <div style="text-align: center;">
+          <figure style="width: 99%;">
+            <div style="width:49%; display: inline-block;" ><img src="assets/lever_results/lever_v26_invis.pdf.jpg"/><figcaption>Invisible</figcaption></div>
+            <div style="width:49%; display: inline-block;" ><img src="assets/lever_results/lever_v26_vis.pdf.jpg"/><figcaption>Visible</figcaption></div>
+          </figure>
+        </div>
+  </div>
+  <div>
+    <h3 id="summary">Summary</h3>
+      In summary, we show that minimax regret has a notable failure case when there are environments with high irreducible regret. Our solution concept can address this problem, and ReMiDi results in higher empirical performance in cases like these.
+      We would like to highlight that, in the same way that minimax regret fixes minimax's problem with unsolvable environments, our solution concept can also fix minimax regret's problem with irreducible regret.
+      <div>
+        <table class="table" id="table:ued_methods_summary" style="margin:auto">
+          <thead>
+            <tr>
+              <th scope="col">Objective</th>
+              <!-- <th scope="col">Works With Unsolvable Environments</th>
+              <th scope="col">Works With Irreducible Regret</th> -->
+              <th scope="col">If there are Unsolvable Levels</th>
+              <th scope="col">If there are Irreducible Regret Levels</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Minimax</td>
+              <td>❌</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td>Minimax Regret</td>
+              <td>✅</td>
+              <td>❌</td>
+            </tr>
+            <tr>
+              <td>BLP</td>
+              <td>✅</td>
+              <td>✅</td>
+            </tr>
+          </tbody>
+        </table>
+        <figcaption>Illustrating the failure cases of different UED objectives. When there are unsolvable environments, normal minimax tends to fail. While minimax regret solves this problem, when there is irreducible regret, it has a similar issue to minimax. Our new BLP objective can address both of these problems. </figcaption>
+      </div>
+  
+  </div>
+  <div>
+    <h2 id="conclusion">Conclusions / Takeaways</h2>
+ 
+    <p>
+    In conclusion, we went over the following core concepts:
+    <ul>
+      <li>Regret does not always correspond to learnability, even though in practice high-regret levels are often useful for learning</li>
+      <li>In cases such as these, minimax regret suffers from the <em>Regret Stagnation</em> problem, manifesting as the adversary sampling primarily levels that provide no learning (e.g., blindfold levels or T-Mazes).</li>
+      <li>This may cause our agent to, unnecessarily, perform poorly on a large subset of levels, which we'd like to avoid if possible.</li>
+      <li>Our novel solution concept, called the <em>Bayesian Level Perfect Minimax Regret Policy</em>, is a refinement of minimax regret, and addresses this problem.</li>
+      <li>We implement a proof-of-concept algorithm, ReMiDi, that empirically addresses this problem.</li>
+    </ul>
+    </p>
+  </div>
+  
+  <p>
+    <b>What now?</b>
+    If you are interested, have a look at our paper for more details and proofs. 
+    Our code is also publicly available <a href="https://github.com/Michael-Beukman/ReMiDi">here</a>.
+    Finally, if you are interested in UED research, have a look at <a href="https://github.com/facebookresearch/minimax/">Minimax</a> or <a href="https://github.com/DramaCow/jaxued">JaxUED</a>, two Jax-based UED libraries.
+  </p>
+  </d-article>
+
+  <d-appendix>
+
+    <h2>Acknowledgements</h2>
+    <p>This is based on the <a href="https://github.com/distillpub/template">Distill Template</a> and the <a href="accelagent.github.io/">ACCEL Blog</a>.</p>
+    <d-bibliography src="examples/bibliography.bib"></d-bibliography>
+  </d-appendix>
+</body>
