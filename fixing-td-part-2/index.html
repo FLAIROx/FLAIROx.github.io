@@ -1,0 +1,570 @@
+<!doctype html>
+
+
+<head>
+ <title>Fixing TD Pt II: Overcoming the Deadly Triad</title>
+ <script>
+   console.log = function() {};
+   console.groupCollapsed = function() {};
+   console.debug = function() {};
+ </script>
+ <script src="dist/template.v2.js"></script>
+ <link rel="stylesheet" href="dist/bootstrap.forms.css">
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+         crossorigin="anonymous"></script>
+
+
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+
+
+ <!-- Uncomment imports below if you want to run TF.js models in browser -->
+ <!-- <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script> -->
+ <script defer src="https://cdn.jsdelivr.net/npm/p5@1.2.0/lib/p5.js"></script>
+ <script src=https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js></script>
+
+
+ <link rel="stylesheet" href="dist/demo.css">
+
+
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta charset="utf8">
+
+
+ <style>
+   .collapsible {
+     background-color: #777;
+     color: white;
+     cursor: pointer;
+     padding: 18px;
+     width: 100%;
+     border: none;
+     text-align: left;
+     outline: none;
+     font-size: 15px;
+   }
+  
+   .active, .collapsible:hover {
+     background-color: #555;
+   }
+  
+   .content {
+     padding: 0 18px;
+     display: none;
+     overflow: hidden;
+     background-color: #f1f1f1;
+   }
+ </style>
+
+
+ <style>
+   #rcornersbox {
+     border-radius: 25px;
+     border: 4px solid #555;
+     background: #fecdc9;
+     padding: 8px;
+   }
+  </style>
+</head>
+
+
+<body>
+ <d-front-matter>
+   <script id='distill-front-matter' type="text/json">{
+   "title": "Fixing TD Part II: Overcoming the Deadly Triad",
+   "description": "",
+   "published": "February 25, 2025",
+   "pubUrl": "https://arxiv.org/pdf/2407.04811",
+   "pubVenue": "arXiv",
+   "authors": [
+     {
+       "author":"Mattie Fellows*",
+       "authorURL":"mailto:matthew.fellows@eng.ox.ac.uk",
+       "affiliations": [
+         {"name": "FLAIR, University of Oxford", "url":"https://foersterlab.com/"}]
+     }
+   ],
+   "katex": {
+     "delimiters": [
+       {"left": "$$", "right": "$$", "display": false}
+     ]
+   }
+ }</script>
+ </d-front-matter>
+
+
+ <div id='cover'>
+   <div id="cover-video-tint"></div>
+   <d-title id="title">
+   </d-title>
+ </div>
+ <d-byline></d-byline>
+
+
+ <d-article>
+   <small>  *This blog summarises work spanning two papers in collaboration with Matthew J.A. Smith (Whiteson Research Lab (WhiRL), University of Oxford), Matteo Gallici (Universitat Politècnica de Catalunya), Benjamin Ellis (Foerster Lab for AI Research (FLAIR), University of Oxford), Bartomeu Pou (Barcelona Supercomputing Center), Ivan Masmitja (Institut de Ciències del Mar), Shimon Whiteson (Whiteson Research Lab (WhiRL), University of Oxford), Jakob Nicolaus Foerster (Foerster Lab for AI Research (FLAIR), University of Oxford) and Mario Martin (Universitat Politècnica de Catalunya).
+     See below for citations.</small>
+
+
+   <h1>Overview</h1>
+
+
+   <p>
+ In Part I of this blog, we characterised the stability of TD through the TD Jacobian.
+ In this part, we now build on this analysis to better understand the reasons for instability before proposing a surprisingly simple architectural solution that can stabilise TD.
+ By the end of this blog, readers will be able to understand the answers to the following two questions in detail:
+   </p>
+   <ul>
+     <li> <b> <font color="#F08080"> I. Can we formalise the deadly triad?</font></b></li>
+     <li><i>Yes! It arises naturally from the TD Jacobian </i></li>
+     <li><b> <font color="#F08080">II. What can be done to tackle the deadly triad?</font></b><li>
+     <li><i>We show that using a combination of LayerNorm and <d-math>\ell^2</d-math> regularisation can overcome the deadly triad</i></li>
+   </ul>
+ <p>
+  <b> <font color="#b71c1c">Prerequisites:</font></b> We assume familiarity with a Markov decisions process (MDP) defined as:
+  <d-math block>
+   \begin{equation*}
+   \mathcal{M} \coloneqq \left\langle \mathcal{S},\mathcal{A},P_0, P_S(s,a), P_R(s,a), \gamma\right\rangle,
+   \end{equation*}
+ </d-math>
+  where <d-math> \mathcal{S}</d-math>  and <d-math>\mathcal{a}</d-math> are the state and action spaces, <d-math>P_0</d-math> is the initial state distribution, <d-math>P_S(s,a)</d-math> and <d-math>P_R(s,a)</d-math> are the state and reward transition distributions and <d-math>\gamma</d-math> is a discount factor.
+  In addition, we also assume some familiarity with stationary distributions and Markov chains, vector calculus and linear algebra.
+  </p>
+  <p>   We have tried to make this blog as accessible as possible for less theoretically inclined readers. For readers who wish to skip its contents and just understand our stable parallelised deep Q-learning algorithm (PQN) from a practical perspective, we have a separate blog <a href="https://mttga.github.io/posts/pqn/" >here</a>.
+ </p>
+   <h1>Recap: The TD Jacobian </h1>
+
+
+   <p>
+     Before diving into the details of the deadly triad, we recap key results from Part I.
+     In these blogs, we have been studying the TD update under function approximation.
+     The goal of TD is to carry out policy evaluation for some target policy <d-math>\pi</d-math>, that is, we want to learn a value function <d-math>V^\pi</d-math> or <d-math>Q</d-math>-function <d-math>Q^\pi</d-math>.
+     TD does this by approximately solving a Bellman equation <d-math>Q^\pi(\cdot)=\mathcal{B}^\pi[Q^\pi](\cdot)</d-math> using a combination of function approximation, stochastic sampling and bootstrapping.
+     The TD update is:
+   </p>
+     <d-math block>
+       \begin{equation*}
+       \omega_{t+1}=\omega_t+\alpha_t \delta(\omega_t,\varsigma_t),\tag{1}
+       \end{equation*}
+     </d-math> 
+     <p>
+     where <d-math>Q_{\omega}(s_t,a_t)</d-math> is a parametric function approximator for a <d-math>Q</d-math>-function, parametrised by <d-math>\omega\in\Omega</d-math> and we define the TD error vector <d-math>\delta(\omega_t,\varsigma_t)</d-math> as:
+   </p>
+   <d-math block>
+     \begin{align*}
+     \delta(\omega_t,\varsigma_t)\coloneqq\left(r_t+\gamma Q_{\omega_t}(s'_t,a'_t)-Q_{\omega_t}(s_t,a_t) \right)\nabla_\omega Q_{\omega_t}(s_t,a_t).\tag{2}
+     \end{align*}
+   </d-math>
+   <p>
+   Here <d-math>\varsigma_t\coloneqq (s_t,a_t,r_t,s_{t+1},a_{t+1})</d-math> denotes all the random variables (i.e. state, action, reward, next state, next action) bunched together in a single random variable for notational convenience.
+   We denote the sampling distribution for state-actions as <d-math>d^\mu</d-math>, where <d-math>\mu</d-math> denotes the sampling policy.
+   Recall our goal was to obtain a simple mathematical tool that can be used to determine the stability of the TD update in Eq. (1).
+   We found that stability can be determined by whether or not the TD Jacobian was negative or positive definite, giving rise to the TD stability criterion:
+   <div id="rcornersbox">
+     <p >
+       <b><i>TD Stability Criterion:</i></b> 
+     </p>
+     <p>    The TD stability criterion holds if the TD Jacobian <d-math>J(\omega)\coloneqq \nabla_\omega  \mathbb{E}_{\varsigma_t}\left[\delta(\omega,\varsigma_t)\right]</d-math> is negative definite, that is:
+       <d-math>v^\top J(\omega)v<0</d-math> for any unit test vector  <d-math>\lVert v\rVert=1</d-math>  and <d-math>\omega\in\Omega</d-math>.
+     </p>
+   </div>
+   </p>
+  
+   <h1>The Deadly Triad</h1>
+   <p>
+     In Part I, we briefly mentioned that there exist known counterexamples demonstrating that TD is provably divergent for nonlinear function approximators and/or off-policy data [<a href="https://www.sciencedirect.com/science/article/abs/pii/B978155860377650013X">Baird, 1995</a>, <a href="https://ieeexplore.ieee.org/document/580874">Tsitsiklis et al., 1997</a>].
+     This combination of bootstrapping, off-policy data and function approximation is known as the 'deadly triad' [<a href="http://incompleteideas.net/book/the-book-2nd.html">Sutton and Barto, 2018</a>,<a href="https://arxiv.org/pdf/1812.02648">van Hasselt et al., 2018</a>].
+     As our TD Jacobian characterises the stability of TD, we should expect it to be able to explain the deadly triad.
+     We now show that this is indeed the case, and the deadly triad emerges quite naturally from plugging in the TD update in Eq. (1) into the TD stability criterion:
+   </p>
+   <d-math block>
+     \begin{align*}
+    v^\top J(\omega)v &= \gamma\mathbb{E}_{\varsigma_t}\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]-\mathbb{E}_{s_t,a_t\sim d^\mu}\left[\left(v^\top\nabla_\phi  Q_\omega(s_t,a_t)\right)^2\right]\\
+    &\quad +\mathbb{E}_{\varsigma_t}\left[\left(r + \gamma Q_\omega(s'_t,a'_t) - Q_\omega(s_t,a_t)  \right)v^\top \nabla_\omega^2 Q_\omega(s_t,a_t)v\right].\tag{3}
+     \end{align*}
+   </d-math>
+   <p>
+     We give a full derivation of this result below, however to best understand the nonlinear and off-policy aspects of the deadly triad, we <i>highly encourage</i> readers to derive it for themselves:
+   </p>
+ <button type="button" class="collapsible" ><i>CLICK TO REVEAL PROOF!</i></button>
+ <div class="content">
+   <p>
+     We start from the definition of the TD stability criterion:
+   </p>
+   <d-math block>
+     \begin{align*}
+     v^\top J(\omega)v&=v^\top \nabla_\omega \mathbb{E}_{\varsigma_t}\left[\delta(\omega,\varsigma_t)\right]v,\\
+     &= \mathbb{E}_{\varsigma_t}\left[v^\top \nabla_\omega\delta(\omega,\varsigma_t)v\right].\tag{4}
+     \end{align*}
+   </d-math>
+   <p>
+     Taking derivatives of the TD error vector:
+   </p>
+   <d-math block>
+     \begin{align*}
+     \nabla_\omega\delta(\omega,\varsigma_t)&=\nabla_\omega\left(r_t+\gamma Q_{\omega}(s'_t,a'_t)-\left(Q_{\omega}(s_t,a_t) \right)\nabla_\omega Q_{\omega}(s_t,a_t)\right),\\
+     &=\left(\gamma \nabla_\omega Q_{\omega}(s'_t,a'_t)-\nabla_\omega Q_{\omega}(s_t,a_t) \right)\nabla_\omega Q_{\omega}(s_t,a_t)^\top\\
+     &\qquad+\left(r_t+\gamma Q_{\omega}(s'_t,a'_t)-Q_{\omega}(s_t,a_t) \right)\nabla_\omega^2 Q_{\omega}(s_t,a_t),
+     \end{align*}
+   </d-math>
+   <p>
+   which we substitute back into Eq. (4):
+   </p>
+   <d-math block>
+     \begin{align*}
+     v^\top J(\omega)v&=\mathbb{E}_{\varsigma_t}\left[\left(\gamma v^\top \nabla_\omega Q_{\omega}(s'_t,a'_t)-v^\top\nabla_\omega Q_{\omega}(s_t,a_t) \right)\nabla_\omega Q_{\omega}(s_t,a_t)^\top v\right]\\
+     &\qquad+\mathbb{E}_{\varsigma_t}\left[\left(r_t+\gamma Q_{\omega}(s'_t,a'_t)-Q_{\omega}(s_t,a_t) \right)v^\top\nabla_\omega^2 Q_{\omega}(s_t,a_t)v\right],\\
+     &=\mathbb{E}_{\varsigma_t}\left[\gamma v^\top \nabla_\omega Q_{\omega}(s'_t,a'_t) \nabla_\omega Q_{\omega}(s_t,a_t)^\top v-(v^\top\nabla_\omega Q_{\omega}(s_t,a_t))^2\right]\\
+     &\qquad+\mathbb{E}_{\varsigma_t}\left[\left(r_t+\gamma Q_{\omega}(s'_t,a'_t)-Q_{\omega}(s_t,a_t) \right)v^\top\nabla_\omega^2 Q_{\omega}(s_t,a_t)v\right],\\
+     &=\gamma \mathbb{E}_{\varsigma_t}\left[v^\top \nabla_\omega Q_{\omega}(s'_t,a'_t) \nabla_\omega Q_{\omega}(s_t,a_t)^\top v\right]-\mathbb{E}_{\varsigma_t}\left[(v^\top\nabla_\omega Q_{\omega}(s_t,a_t))^2\right]\\
+     &\qquad+\mathbb{E}_{\varsigma_t}\left[\left(r_t+\gamma Q_{\omega}(s'_t,a'_t)-Q_{\omega}(s_t,a_t) \right)v^\top\nabla_\omega^2 Q_{\omega}(s_t,a_t)v\right],\\
+     &=\gamma \mathbb{E}_{\varsigma_t}\left[v^\top \nabla_\omega Q_{\omega}(s'_t,a'_t) \nabla_\omega Q_{\omega}(s_t,a_t)^\top v\right]\\
+     &\qquad-\mathbb{E}_{s_t,a_t\sim d^\mu}\left[(v^\top\nabla_\omega Q_{\omega}(s_t,a_t))^2\right]\\
+     &\qquad+\mathbb{E}_{\varsigma_t}\left[\left(r_t+\gamma Q_{\omega}(s'_t,a'_t)-Q_{\omega}(s_t,a_t) \right)v^\top\nabla_\omega^2 Q_{\omega}(s_t,a_t)v\right],
+     \end{align*}
+   </d-math>
+   <p>as required.</p>
+ </div>
+<p>
+
+
+ <p>
+   We now take a closer look at Eq. (3) to understand how each component is affected by nonlinear function approximation and off-policy data sampling:
+ </p>
+ <p>
+   <b><font color="#602050">  Off-policy Instability: </font></b> We define the off-policy component of the TD stability criterion as:
+ </p>
+ <d-math block>
+ \begin{align*}
+ \mathcal{C}_\textrm{OffPolicy}&(Q_\omega,d^{\mu})\\
+ \coloneqq \gamma\mathbb{E}_{\varsigma_t}&\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]-\mathbb{E}_{s_t,a_t\sim d^\mu}\left[\left(v^\top\nabla_\phi  Q_\omega(s_t,a_t)\right)^2\right].\tag{5}
+ \end{align*}
+</d-math>
+<p>
+ Examining Eq. (5) reveals that the off-policy component is always negative if:
+</p>
+<d-math block>
+\begin{align*}
+\gamma\mathbb{E}_{\varsigma_t}&\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]<\mathbb{E}_{s_t,a_t\sim d^\mu}\left[\left(v^\top\nabla_\phi  Q_\omega(s_t,a_t)\right)^2\right].\tag{6}
+\end{align*}
+</d-math>
+<p>
+Whether Ineq. (6) holds or not depends on the sampling distribution <d-math>d^\mu</d-math>, which governs how state-actions <d-math>s_t,a_t</d-math> are sampled for the TD update.
+For the special case of on-policy sampling, agents follow the target policy <d-math>a_t\sim\pi(s_t)</d-math> when collecting data for the TD upates.
+This means that the sampling policy is the same as the target policy: <d-math>\mu=\pi</d-math>.
+If the agent is interacting with an ergodic MDP, under appropriate regularity assumptions (see [<a href="https://arxiv.org/pdf/math/0404033">Roberts and Rosenthal, 2004</a>] for a comprehensive survey), the distribution over state-actions that the agent encounters tends towards the <i>stationary distribution</i> of the Markov chain.
+Crucially, if <d-math>d^\pi</d-math> is a stationary distribution of the MDP, for any measurable function <d-math>f(s,a)</d-math>, it satisfies:
+</p>
+<d-math block>
+ \begin{align*}
+ \mathbb{E}_{s_t,a_t\sim  d^\pi, s_t',a_t'\sim P_{S,A}^\pi(s_t,a_t) }&\left[ f(s'_t,a'_t)\right]=\mathbb{E}_{s_t,a_t\sim d^\pi}\left[f(s_t,a_t)\right].\tag{7}
+ \end{align*}
+ </d-math>
+<p>
+ In words, Eq. (7) says that when sampling from the stationary distribution, the expected value of a function one timestep into the future under the Markov chain is the same as the expected value at the current timestep, so there is no change in expectation as the Markov chain is traversed.
+ Through an application of the Cauchy-Schwarz inequality, this allows us to prove:
+</p>
+<d-math block>
+ \begin{align*}
+ \mathbb{E}_{\varsigma_t}&\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]\le\mathbb{E}_{s_t,a_t\sim d^\mu}\left[\left(v^\top\nabla_\phi  Q_\omega(s_t,a_t)\right)^2\right].\tag{8}
+ \end{align*}
+</d-math>
+<p>
+ Again, we encourage readers to prove this bound for themselves, but provide a derivation below:
+</p>
+<button type="button" class="collapsible" ><i>CLICK TO REVEAL PROOF!</i></button>
+<div class="content">
+ <p>
+   We start by bounding the lefthand side of Ineq. (8):
+ </p>
+ <d-math block>
+   \begin{align*}
+   \mathbb{E}_{\varsigma_t}&\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]\le\left\lvert\mathbb{E}_{\varsigma_t}\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]\right\rvert,\\
+   &=\sqrt{\left\lvert\mathbb{E}_{\varsigma_t}\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]\right\rvert^2}.
+   \end{align*}
+ </d-math>
+ <p>
+   Applying the Cauchy-Schwarz inequality:
+ </p>
+ <d-math block>
+   \begin{align*}
+   \mathbb{E}_{\varsigma_t}&\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]\\
+   &\le\sqrt{\mathbb{E}_{\varsigma_t}\left[(v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t))^2\right]\mathbb{E}_{\varsigma_t}\left[(\nabla_\omega Q_\omega(s_t,a_t)^\top v)^2\right]}.
+   \end{align*}
+ </d-math>
+ <p>
+   Now, if <d-math>d^\pi</d-math> is a stationary distribution of the MDP, then:
+   <d-math block>
+     \begin{align*}
+     \mathbb{E}_{\varsigma_t}\left[(v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t))^2\right]&=\mathbb{E}_{s_t,a_t\sim  d^\pi, s_t',a_t'\sim P_{S,A}^\pi(s_t,a_t) }\left[(v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t))^2\right]\\
+     &=\mathbb{E}_{s_t,a_t\sim d^\pi}\left[(v^\top \nabla_\phi  Q_{\omega}(s_t,a_t))^2\right],
+     \end{align*}
+   </d-math>
+ <p>
+ from which our desired result follows:
+ </p>   
+ <d-math block>
+   \begin{align*}
+   \mathbb{E}_{\varsigma_t}&\left[v^\top \nabla_\phi  Q_{\omega}(s'_t,a'_t)\nabla_\omega Q_\omega(s_t,a_t)^\top v\right]\\
+   &\le\sqrt{\mathbb{E}_{s_t,a_t\sim d^\pi}\left[(v^\top \nabla_\phi  Q_{\omega}(s_t,a_t))^2\right]\mathbb{E}_{\varsigma_t}\left[(\nabla_\omega Q_\omega(s_t,a_t)^\top v)^2\right]},\\
+   &=\sqrt{\mathbb{E}_{s_t,a_t\sim d^\pi}\left[(v^\top \nabla_\phi  Q_{\omega}(s_t,a_t))^2\right]^2},\\
+   &=\mathbb{E}_{s_t,a_t\sim d^\pi}\left[(v^\top \nabla_\phi  Q_{\omega}(s_t,a_t))^2\right]^2.
+   \end{align*}
+ </d-math>
+</div>
+<p>
+ Because <d-math>\gamma<1</d-math> by definition, Ineq. (8) implies that Ineq. (6) holds, and so the off-policy component of the TD stability criterion is automatically satisfied, that is:
+</p>
+<d-math block>
+ \begin{align*}
+\mathcal{C}_\textrm{OffPolicy}(Q_\omega,d^{\pi})<0.
+\end{align*}
+</d-math>
+<p>
+ Unfortunately, the assumption that TD is updated by sampling from the MDPs stationary distribution is not practical for two reasons:
+ firstly, in learning problems some degree of exploration is needed so that TD updates cover a diverse space of state-action-reward-state observations, and so updates are typically sampled from an exploration policy <d-math>\mu\ne \pi</d-math> that differs from the target policy;
+ secondly, even if on-policy sampling is carried out, the rate at which the sampling distribution converges to the stationary distribution of the Markov chain may be slow, meaning that for the finite timescales over which practical algorithms run, the actual sampling distribution may be far from the stationary distribution.
+ Algorithms like <d-math>Q</d-math>-learning in particular are inherently off-policy, and it is possible to construct MDPs like Baird's counterexample [<a href="https://www.sciencedirect.com/science/article/abs/pii/B978155860377650013X">Baird, 1995</a>] for which <d-math>\mathcal{C}_\textrm{OffPolicy}(Q_\omega,d^{\mu})>0</d-math>, leading to provably divergent algorithms.
+ As such, we conclude that <d-math>\mathcal{C}_\textrm{OffPolicy}(Q_\omega,d^{\mu})</d-math> measures the degree of distributional shift of the sampling distribution from the station distribution that TD can tolerate before becoming unstable.
+</p>
+<p>
+ <b><font color="#602050">  Nonlinear Instability: </font></b> We define the nonlinear component of the TD stability criterion as:
+</p>
+<d-math block>
+ \begin{align*}
+ \mathcal{C}_\textrm{Nonlinear}(Q_\omega)\coloneqq \mathbb{E}_{\varsigma_t}\left[\left(r + \gamma Q_\omega(s'_t,a'_t) - Q_\omega(s_t,a_t)  \right)v^\top \nabla_\omega^2 Q_\omega(s_t,a_t)v\right].\tag{9}
+ \end{align*}
+</d-math>
+<p>
+ Examining Eq. (9) reveals that the nonlinear component of the TD stability condition does not apply for linear function approximators as second order derivatives are zero: $\nabla_\phi^2 Q_\phi(x)=0$, hence <d-math>\mathcal{C}_\textrm{Nonlinear}(Q_\omega)=0</d-math>.
+ In the nonlinear case, <d-math>\mathcal{C}_\textrm{Nonlinear}(Q_\omega)</d-math> can be arbitrarily positive depending upon the specific MDP and choice of function approximator.
+ Hence <i>nonlinearity</i> is a key source of instability in TD which is characterised by <d-math>\mathcal{C}_\textrm{Nonlinear}(Q_\omega)</d-math>
+</p>
+<p>
+ In conclusion, our analysis provides a clear answer to question I: Can we formalise the deadly triad?
+</p>
+<p>
+ <b><font color="#F08080"> The TD stability criterion can be violated for off-policy sampling and for nonlinear function approximation when  <d-math>\mathcal{C}_\textrm{OffPolicy}(Q_\omega,d^{\mu})>0</d-math> and <d-math>\mathcal{C}_\textrm{Nonlinear}(Q_\omega)>0</d-math> </font></b>.
+</p>
+
+
+<h1>LayerNorm and <d-math>\ell^2</d-math>-Regularisation to the Rescue</h1>
+
+
+<p>
+ We have shown that the deadly triad presents a major challenge for any TD method to overcome if RL algorithms are to be safe and reliable.
+ We now show that introducing LayerNorm layers into the critic and <d-math>\ell^2</d-math>-regularisation into the TD update can tackle both the off-policy and nonlinear components of the deadly triad, allowing us to develop and simple and stable modern <d-math>Q</d-math>-learning algorithm.
+ For our analysis, we study the following LayerNorm critic:
+</p>
+<d-math block>
+ \begin{align*}
+   Q_\omega^k(s,a)\coloneqq w^\top\sigma_\textrm{Post}\circ\textrm{LayerNorm}^k\left[ \sigma_\textrm{Pre}\circ M x\right],
+   \end{align*}
+</d-math>
+<p>
+where <d-math>x\coloneqq \textrm{Vec}(s,a)</d-math> is a <d-math>d</d-math>-dimensional input vector formed of the state-actions, <d-math>\omega= [w^\top,\textrm{Vec}(M)^\top]</d-math> is the parameter vector where <d-math>M\in\mathbb{R}^{k\times d}</d-math> is a <d-math>k\times d</d-math> matrix where each row <d-math>\lVert m_i\rVert</d-math>  is bounded, <d-math>w\in\mathbb{R}^k</d-math> is a vector of final layer weights where <d-math>\lVert \rVert</d-math> is bounded and <d-math>\sigma_\textrm{Pre}</d-math> and <d-math>\sigma_\textrm{Post}</d-math> are element-wise <d-math>C^2</d-math>-continuous activations with bounded 2nd order derivatives.
+We assume the final activation <d-math>\sigma_\textrm{Post}</d-math> is <d-math>L_\textrm{Post}</d-math>-Lipschitz with <d-math>\sigma_\textrm{Post}(0)=0</d-math>, (e.g. tanh, identity, GELU, ELU...).
+LayerNorm [<a href="https://arxiv.org/pdf/1607.06450">Ba et al., 2016</a>] is defined element-wise as:
+</p>
+<d-math block>
+ \begin{align*}
+ \textrm{LayerNorm}^k_i\left[f(x)\right]&\coloneqq \frac{1}{\sqrt{k}}\cdot\frac{f_i(x)-\frac{1}{k}\sum_{j=0}^{k-1} f_j(x)}{\sqrt{\frac{1}{k}\sum_{i=0}^{k-1}( f_i(x)-\frac{1}{k}\sum_{j=0}^{k-1} f_j(x) )^2+\epsilon}},\tag{10}
+   \end{align*}
+</d-math>
+<p>where <d-math>\epsilon</d-math> is a small constant introduced for numerical stability. Deeper networks with more LayerNorm layers may be used in practice, however our analysis reveals that only the final layer weights affect the stability of TD with wide LayerNorm neural networks.
+ So why should we expect LayerNorm to stabilise TD?
+ The key insight is that the LayerNorm operator rescales the input according to a standard Gaussian, hence if weights in any part of the network before the LayerNorm start to grow, their effect will be countered through the variance term on denominator of Eq. (10) and will not cause the final output of the network to grow accordingly.
+ This arises from the <i>normalising</i> property of the LayerNorm layer.
+ We should expect this property to discourage any part of the network from growing without bound, especially as <d-math>k</d-math> increases and the empirical mean and standard deviations in Eq. (10) approach their true expectations, thereby increasing the degree of normalisation provided.
+  In our <a href="https://arxiv.org/pdf/2407.04811">paper</a> we formally investigate this property, showing that the off-policy and nonlinear components of the TD stability condition can be bounded as:
+</p>
+<d-math block>
+ \begin{align*}
+ \textrm{Off-Policy Bound:}\quad  \mathcal{C}_\textrm{OffPolicy}(Q_\omega^k,d^{\mu})&\le \left\lVert v_w \cdot\frac{ \gamma L_\textrm{Post}  }{2}\right\rVert^2 +\mathcal{O}\left(\frac{\left\lVert v_M\right\rVert^2}{k}\right),\tag{11} \\
+ \textrm{Nonlinear Bound:} \qquad \ \  \mathcal{C}_\textrm{Nonlinear}(Q_\omega^k)&=\mathcal{O}\left(\frac{\left\lVert v\right\rVert^2}{\sqrt{k}}\right),\tag{12}
+   \end{align*}
+</d-math>
+<p>where we have split the test vector <d-math>v=[v_w^\top,v_M^\top]^\top</d-math> in to two components: <d-math>v_w</d-math> associated with final layer parameters <d-math>w</d-math>, and <d-math>v_M</d-math> associated with the matrix parameters <d-math>\textnormal{\textrm{Vec}}(M)</d-math>.
+ The bounds in Ineqs. (11) and (12) reveals that as the degree of regularisation increases, that is in the limit <d-math>k\rightarrow \infty</d-math>, all nonlinear instability can be mitigated: <d-math>\lim_{k\rightarrow\infty} \mathcal{C}_\textnormal{\textrm{Nonlinear}}(Q_\omega^k)=0</d-math> and a residual term is left in the off-policy bound: <d-math>\lim_{k\rightarrow\infty}\mathcal{C}_\textnormal{\textrm{OffPolicy}}(Q_\omega^k,d^{\mu})\le\left\lVert v_w \cdot\frac{ \gamma L_\textrm{Post} }{2}\right\rVert^2</d-math>.
+</p>
+<p>
+The nonlinear bound in Ineq. (12) can be explained using established theory of wide neural networks; as layer width increases, second order derivative terms tend to zero [<a href="https://arxiv.org/pdf/2010.01092">Lui et al. 2020</a>]. Our proof extends this theory, showing that LayerNorm preserves this property.
+
+
+As we outlined in the previous section, linear function approximators still suffer from off-policy instability due the distributional shift between <d-math>\pi</d-math> and <d-math>\mu</d-math>.
+Because of this, linearisation of wide networks alone cannot explain the bound in Ineq. (11).
+As we already alluded to, our proof for reveals this bound is due to the normalising property of LayerNorm, which upper bounds the expected norm: <d-math>\mathbb{E}_{x\sim d^\mu}\left[\left\lVert\textrm{LayerNorm}^k[Mx]\right\rVert \right]\le 1</d-math> <i>regardless of the sampling distribution<d-math>d^\mu</d-math></i>  or <i>magnitude of <d-math>M</d-math></i>.
+This yields a bound with a residual term of <d-math>\left\lVert v_w \cdot\frac{ \gamma L_\textrm{Post} }{2}\right\rVert^2</d-math> that is independent of <d-math>\pi</d-math> and <d-math>\mu</d-math>, overcoming the distributional shift issue responsible for off-policy instability.
+</p>
+<p>
+ We have almost tackled the deadly triad, showing that increasing <d-math>k</d-math> can diminish the nonlinear and off-policy components of the TD stability condition towards zero.
+ To formally guarantee stability, we just need to deal with the residual term in the off-policy bound and give all remaining parameters a small push so both components become negative.
+ A simple solution is to introduce <d-math>\ell^2</d-math>-regularisation into the TD update vector:
+ </p>
+ <d-math block>
+ \begin{align*}
+     \delta^k_\textrm{reg}(\omega,\varsigma_t)\coloneqq \delta^k(\omega,\varsigma_t)-\left(\eta \left(\frac{\gamma L_\textrm{Post}}{2}\right)^2\begin{bmatrix} w\\0\end{bmatrix}+(\eta-1)\begin{bmatrix}
+         0\\\textrm{Vec}(M)
+     \end{bmatrix}\right),\tag{13}
+ \end{align*}
+</d-math>
+<p>
+for any <d-math>\eta>1</d-math> where <d-math>\delta^k(\omega,\varsigma_t)</d-math> is the TD update vector from Eq.(2) using the LayerNorm critic.
+Using the <d-math>\ell^2</d-math>-regularised update from Eq. (13) yields a bound:
+</p>
+<d-math block>
+\begin{align*}
+ \mathcal{C}_\textrm{OffPolicy}(Q_\omega^k,d^{\mu})\le (1-\eta)\left(\left\lVert v_w \cdot\frac{ \gamma L_\textrm{Post}  }{2}\right\rVert^2+ \left\lVert v_M\right\rVert^2\right)+\mathcal{O}\left(\frac{1}{k}\right),
+\end{align*}
+</d-math>
+<p>
+which implies <d-math>\mathcal{C}_\textrm{OffPolicy}(Q_\omega^k,d^{\mu})<0</d-math> with sufficiently large <d-math>k</d-math>, meaning the TD stability criterion will be satisfied.
+We formally confirm this intuition in the following theorem, assumptions and a full proof of which can be found in our <a href="https://arxiv.org/pdf/2407.04811">paper</a>:
+</p>
+<d-math block>
+ \begin{align*}
+&\textrm{\textbf{Theorem:} Using the LayerNorm regularised TD update } \delta^k_\textrm{reg}(\omega,\varsigma_t)\\
+&\textrm{in Eq. (13), there exists some finite }k'\textrm{ such that the TD stability criterion}\\
+&\textrm{holds for all }k>k'.
+ \end{align*}
+</d-math>
+<p>
+ In words, our <d-math>\textrm{\textbf{Theorem}}</d-math> states that there exists a finite value of <d-math>k</d-math> that will provably stabilise the TD updates given <d-math>\eta>1</d-math>.
+ The key insight from this result is that as <d-math>k</d-math> and <d-math>\eta</d-math> increase, the TD updates transition from a region of potential divergence to provable convergence. We sketch this phenomenon in Fig. 1 below:
+</p>
+<div class="centered-content-container">
+ <figure>
+   <figcaption style="text-align: center;">Figure 1: Sketch of Convergence Regime.</figcaption>
+   <img  width="100" src="dist/img/convergence_plot.png" >
+ </figure>
+ </div>
+<p>As the update transitions into the region of provable convergence (blue), it can pass into a region of convergence (grey) that may not be provable using our bounds.
+ As the blue region represents a regime with a single, stable fixed point, mirroring a convex optimisation problem, the grey region also contains regimes for which there exist several stable fixed points, mirroring a standard non-convex optimisation problem with several local minima.
+ When deploying our algorithm in practice, we don't need to reach a provably convergent region, instead it suffices to increase <d-math>k</d-math> enough such that the updates lie in the generally convergent region (i.e. blue or grey).
+ With this in mind, we remark that whilst adding an <d-math>\ell^2</d-math>-regularisation term <d-math>-\eta \omega</d-math> to all parameters can stabilise TD alone, large <d-math>\eta</d-math> recovers a quadratic optimisation problem with minimum at <d-math>\omega=0</d-math>, pulling the TD fixed points towards <d-math>0</d-math>.
+ Hence, we suggest <i><d-math>\ell^2</d-math>-regularisation should be used sparingly</i>; only when LayerNorm alone cannot stabilise the environment and initially only over the final layer weights.
+ Aside from Baird's counterexample, we find LayerNorm without <d-math>\ell^2</d-math> regularisation can stabilise all environments in our <a href="https://arxiv.org/pdf/2407.04811">paper's</a> extensive empirical evaluation.</p>
+ <h1>Putting Theory to the Test</h1>
+<p>
+ Recall from our first blog, we showed empirically how deep <d-math>Q</d-math>-learning (that is, DQN without a target network or replay buffer) is too unstable to be used in even simple domains.
+ In our theoretical analysis, we developed a regularised TD update (Eq. (13)) that is provably stable for some finite network width.
+ As an empirical demonstration, we now repeat the same experiment to show how the introduction of LayerNorm and <d-math>\ell^2</d-math>-regularisation yields a simple and stable deep <d-math>Q</d-math>-learning algorithm that can be applied in practice.
+ We plot results in Figs. 2-4 below, comparing CleanRL's DQN <a href="https://arxiv.org/pdf/2111.08819">[Huang et al., 2021]</a> with the target network and replay buffer removed to CleanRL's implementation of our PQN algorithm for a single environment interaction at each timestep with no buffer and without <d-math>\lambda</d-math>-returns, thereby recovering a regularised deep <d-math>Q</d-math>-learning algorithm without a replay buffer or target network.
+</p>
+
+
+<div class="centered-content-container">
+ <figure>
+   <figcaption style="text-align: center;">Figure 2: ClearnRL's DQN without a target network and replay buffer in Cartpole V1.</figcaption>
+   <video width="600" autoplay muted loop playsinline>
+     <source src="dist/video/DQN_no_target_no_buffer_cartpolev1.mp4" type="video/mp4">
+   </video>
+ </figure>
+</div>
+<div class="centered-content-container">
+ <figure>
+   <figcaption style="text-align: center;">Figure 3: ClearnRL's PQN (single environment interaction, no lambda-returns and no buffer) in Cartpole V1.</figcaption>
+   <video width="600" autoplay muted loop playsinline>
+     <source src="dist/video/PQN_cartpolev1.mp4" type="video/mp4">
+   </video>
+ </figure>
+</div>
+<div class="centered-content-container">
+<figure>
+ <figcaption style="text-align: center;">Figure 4: Comparison of Episodic Returns in Cartpole V1.</figcaption>
+ <img  width="100" src="dist/img/cartpole-v1.png" >
+</figure>
+</div>
+<p>
+  The result above show that simply introducing LayerNorm regularisation results in a marked improvement in performance; our update can reliably learn to solve Cartpole-v1 where deep <d-math>Q</d-math>-learning fails.
+  Finally, we evaluate in the infamous Baird's counterexample [<a href="https://www.sciencedirect.com/science/article/abs/pii/B978155860377650013X">Baird, 1995</a>], which is a provably divergent MDP for Q-learning under function approximation.
+  Fig. 5 shows that together LayerNorm + <d-math>\ell^2</d-math>-regularisation can stabilise TD in this challenging environment.
+  Our results reveal that stabilisation is mostly attributed to the introduction of LayerNorm.
+  Moreover the degree of <d-math>\ell^2</d-math>-regularisation needed is small - just enough to mitigate off-policy stability due to final layer weights according to our theoretical results - and it makes relatively little difference when used in isolation.
+</p>
+<div class="centered-content-container">
+ <figure>
+   <figcaption style="text-align: center;">Figure 5: Evaluation in Baird's Counterexample.</figcaption>
+   <img  width="1000" src="dist/img/bairds.png" >
+ </figure>
+ </div>
+<p>
+ In conclusion, our analysis and empirical evaluation provides a positive answer to the question: What can be done to tackle the deadly triad?
+</p>
+<p>
+ <b><font color="#5F9EA0"> Introducing LayerNorm and <d-math>\ell^2</d-math>-regularisation has the power to stabilise the TD update. </font></b>
+</p>
+
+
+
+
+<h1>What's Next?</h1>
+<p>
+ In this blog, we have shown that the deadly triad arises naturally from our TD stability criterion, which can be separated into a nonlinear and off-policy component.
+ Although the deadly triad seemed like a fatal blow for simple and stable TD algorithms, we showed that introducing LayerNorm regularisation alongside <d-math>\ell^2</d-math>-regularisation into the TD update offers a simple but powerful solution with provable convergence guarantees.
+ In our next blog, show how our stable <d-math>Q</d-math>-learning update can unlocks the power of parallelised computation for RL, allowing us to develop a state-of-the-art parallelised <d-math>Q</d-math>-learning algorithm (PQN) that is several times faster than traditional DQN with improved sample efficiency.
+ See you  <a href="https://mttga.github.io/posts/pqn/" >there</a>!
+</p>
+
+
+
+
+<h3>Citation</h3>
+   <p>
+   For attribution in academic contexts, please cite this blog as:
+   </p>
+   <pre class="citation long">
+   @misc{Fellows2025fixingtdii,
+     title={Fixing TD Pt II: Overcoming the Deadly Triad},
+     author={Mattie Fellows},
+     journal={Foerster Lab for AI Research (FLAIR)},
+     year={2025}
+   }
+   </pre>
+   <p>
+     and the corresponding papers as:
+     </p>
+     <pre class="citation long">
+       @article{Fellows23why,
+         author = {Mattie Fellows and Matthew J.A. Smith and Shimon Whiteson},
+         journal = {International Conference on Machine Learning (ICML)},
+         title = {Why Target Networks Stabilise Temporal Difference Methods},
+         url={https://arxiv.org/pdf/2302.12537},
+         year = {2023}
+       }
+       @article{Gallici25simplifying,
+         title={Simplifying Deep Temporal Difference Learning},
+         author={Matteo Gallici and Mattie Fellows and Benjamin Ellis
+           and Bartomeu Pou and Ivan Masmitja and Jakob Nicolaus Foerster
+            and Mario Martin},
+         year={2025}, 
+         eprint={2407.04811},
+         journal={The International Conference on Learning Representations (ICLR)},
+         primaryClass={cs.LG},
+         url={https://arxiv.org/abs/2407.04811},
+       }
+       </pre>
+
+
+   <d-bibliography src="dist/bibliography.bib"></d-bibliography>
+
+
+ <script>
+ var coll = document.getElementsByClassName("collapsible");
+ var i;
+  for (i = 0; i < coll.length; i++) {
+   coll[i].addEventListener("click", function() {
+     this.classList.toggle("active");
+     var content = this.nextElementSibling;
+     if (content.style.display === "block") {
+       content.style.display = "none";
+     } else {
+       content.style.display = "block";
+     }
+   });
+ }
+ </script>
+ </d-article>
+  </body>
+ </html>
+

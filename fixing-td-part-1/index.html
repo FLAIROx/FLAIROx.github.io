@@ -1,0 +1,606 @@
+<!doctype html>
+
+
+<head>
+ <title>Fixing TD Pt I: Why is Temporal Difference Learning so Unstable?</title>
+ <script>
+   console.log = function() {};
+   console.groupCollapsed = function() {};
+   console.debug = function() {};
+ </script>
+ <script src="dist/template.v2.js"></script>
+ <link rel="stylesheet" href="dist/bootstrap.forms.css">
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+         crossorigin="anonymous"></script>
+
+
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+
+
+ <!-- Uncomment imports below if you want to run TF.js models in browser -->
+ <!-- <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script> -->
+ <script defer src="https://cdn.jsdelivr.net/npm/p5@1.2.0/lib/p5.js"></script>
+ <script src=https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js></script>
+
+
+ <link rel="stylesheet" href="dist/demo.css">
+
+
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta charset="utf8">
+
+
+ <style>
+   .collapsible {
+     background-color: #777;
+     color: white;
+     cursor: pointer;
+     padding: 18px;
+     width: 100%;
+     border: none;
+     text-align: left;
+     outline: none;
+     font-size: 15px;
+   }
+  
+   .active, .collapsible:hover {
+     background-color: #555;
+   }
+  
+   .content {
+     padding: 0 18px;
+     display: none;
+     overflow: hidden;
+     background-color: #f1f1f1;
+   }
+ </style>
+
+
+ <style>
+   #rcornersbox {
+     border-radius: 25px;
+     border: 4px solid #555;
+     background: #fecdc9;
+     padding: 8px;
+   }
+  </style>
+</head>
+
+
+<body>
+ <d-front-matter>
+   <script id='distill-front-matter' type="text/json">{
+   "title": "Fixing TD Part I: Why is Temporal Difference Learning so Unstable?",
+   "description": "",
+   "published": "February 25, 2025",
+   "pubUrl": "https://arxiv.org/pdf/2407.04811",
+   "pubVenue": "arXiv",
+   "authors": [
+     {
+       "author":"Mattie Fellows*",
+       "authorURL":"mailto:matthew.fellows@eng.ox.ac.uk",
+       "affiliations": [
+         {"name": "FLAIR, University of Oxford", "url":"https://foersterlab.com/"}]
+     }
+   ],
+   "katex": {
+     "delimiters": [
+       {"left": "$$", "right": "$$", "display": false}
+     ]
+   }
+ }</script>
+ </d-front-matter>
+
+
+ <div id='cover'>
+   <div id="cover-video-tint"></div>
+   <d-title id="title">
+   </d-title>
+ </div>
+ <d-byline></d-byline>
+
+
+ <d-article>
+   <small>  *This blog summarises work spanning two papers in collaboration with Matthew J.A. Smith (Whiteson Research Lab (WhiRL), University of Oxford), Matteo Gallici (Universitat Politècnica de Catalunya), Benjamin Ellis (Foerster Lab for AI Research (FLAIR), University of Oxford), Bartomeu Pou (Barcelona Supercomputing Center), Ivan Masmitja (Institut de Ciències del Mar), Shimon Whiteson (Whiteson Research Lab (WhiRL), University of Oxford), Jakob Nicolaus Foerster (Foerster Lab for AI Research (FLAIR), University of Oxford) and Mario Martin (Universitat Politècnica de Catalunya).
+     See below for citations.</small>
+
+
+   <h1>Overview</h1>
+
+
+   <p>
+ Since their introduction by Rich Sutton in 1988 <a href="https://link.springer.com/article/10.1007/BF00115009">[Sutton, 1988]</a>, temporal difference (TD) methods have become the cornerstone of modern reinforcement learning (RL) algorithms.
+ Given TD's ubiquity, it often comes as a surprise to many researchers that TD is not an inherently stable algorithm when used in the context of deep RL.
+ What's more surprising is that until recently, a full formal understanding of why the tricks used to stabilise TD in practice actually work has been missing.
+ In this first blog of a two-part series, we take a deep dive into understanding the challenges faced when developing stable TD algorithms and introduce a powerful tool to formally characterise TD's instability mathematically.
+ Our goal is for the reader to understand the answers to the following two questions in detail:
+   </p>
+   <ul>
+     <li> <b> <font color="#F08080"> I. Why is TD so unstable?</font></b></li>
+     <li><i>Because it is not a gradient of any objective.</i></li>
+     <li><b> <font color="#F08080">II. Can we understand this instability mathematically?</font></b><li>
+     <li><i>Yes! Using the Jacobian.</i></li>
+   </ul>
+ <p>
+  <b> <font color="#b71c1c">Prerequisites:</font></b> We assume familiarity with a Markov decisions process (MDP) defined as:
+  <d-math block>
+   \begin{equation*}
+   \mathcal{M} \coloneqq \left\langle \mathcal{S},\mathcal{A},P_0, P_S(s,a), P_R(s,a), \gamma\right\rangle,
+   \end{equation*}
+ </d-math>
+  where <d-math> \mathcal{S}</d-math>  and <d-math>\mathcal{a}</d-math> are the state and action spaces, <d-math>P_0</d-math> is the initial state distribution, <d-math>P_S(s,a)</d-math> and <d-math>P_R(s,a)</d-math> are the state transition and reward distributions and <d-math>\gamma</d-math> is a discount factor.
+  In addition, we also assume some familiarity with the Fundamental Theorem of Calculus, vector calculus and linear algebra.
+  </p>
+  <p>   We'll admit, this blog is particularly mathematical. However we have tried to make it as accessible as possible for less theoretically inclined readers. For readers who wish to skip its contents and just understand our stable parallelised deep Q-learning algorithm (PQN) from a practical perspective, we have a separate blog <a href="https://mttga.github.io/posts/pqn/" >here</a>.
+ </p>
+   <h1>Doesn't TD Work Fine? Why Should we Care? </h1>
+
+
+   <p>
+  Without additional features such as a replay buffer, target networks or normalisation layers, raw TD is a very unstable algorithm when used for deep RL.
+  To demonstrate this, we run CleanRL's DQN <a href="https://arxiv.org/pdf/2111.08819">[Huang et al., 2021]</a> with the target network and replay buffer removed and evaluate on Cartpole V1 over 5 seeds:
+   </p>
+   <div class="centered-content-container">
+     <figure>
+       <figcaption style="text-align: center;">Figure 1: ClearnRL's DQN without a target network and replay buffer in Cartpole V1.</figcaption>
+       <video width="600" autoplay muted loop playsinline>
+         <source src="dist/video/DQN_no_target_no_buffer_cartpolev1.mp4" type="video/mp4">
+       </video>
+     </figure>
+   </div>
+   <div class="centered-content-container">
+   <figure>
+     <img  width="100" src="dist/img/DQN_no_target_no_replay_cartpolev1.png" >
+   </figure>
+  </div>
+
+
+   <p>
+   As we can see from Figure 1,  even in the simplest domains, DQN is pretty unstable without target networks and replay buffers.
+   This is no coincidence; indeed there exist known counterexamples demonstrating that TD is provably divergent for nonlinear function approximators and/or off-policy data [<a href="https://www.sciencedirect.com/science/article/abs/pii/B978155860377650013X">Baird, 1995</a>, <a href="https://ieeexplore.ieee.org/document/580874">Tsitsiklis et al., 1997</a>].
+   This combination of bootstrapping, off-policy data and function approximation became known the 'deadly triad' <a href="http://incompleteideas.net/book/the-book-2nd.html">[Sutton and Barto, 2018]</a> and seemed to be a fatal blow for the practical application of TD algorithms like Q-learning.
+   DQN <a href="https://www.nature.com/articles/nature14236">[Mnih et al., 2015]</a> was a huge breakthrough for RL researchers, demonstrating for the first time that RL had the potential to break the deadly triad and solve real world problems.
+   </p>
+   <p>
+   However, the question of stability has not been completely resolved: In the post-DQN era, TD now <i>seems</i> to work across many simulated domains, but a formal proof of convergence remains illusive. From an AI safety perspective, something seeming to work is still not good enough.
+   For example, if an RL practitioner makes the (questionable) choice of applying RL to financial markets, they must be completely certain there exist no environments or situations that could cause their algorithm to diverge, especially when an algorithm unpredictably diverging has the potential to destabilise an economy.
+   Moreover, all of the tricks needed to stabilise DQN (target networks and large replay buffers) can make it unnecessarily computationally expensive, especially for practioners with modest computational budgets.
+ </p><p>
+  <b><font color="#5F9EA0"> A rigorous understanding of TD is essential before algorithms can be deployed in the real world.</font></b>
+   </p>
+  
+   <h1>The Goal of TD</h1>
+   <p>
+     To understand TD's specific convergence challenges, we first revisit the problem that TD is trying to solve. Learning (action-)value functions is a core component of many RL algorithms. In this blog we will study action-value (or <d-math>Q</d-math>-)functions, but all our results apply to value functions too.
+     To yield a tractable algorithm for learning <d-math>Q</d-math>-functions, a common approach approach is to introduce a parametric function approximator <d-math>Q_\omega(s,a)</d-math> parametrised by a set of <d-math>n</d-math>-dimensional parameters <d-math>\omega\in \Omega\subseteq \mathbb{R}^n</d-math>.
+     Each <d-math>\omega</d-math> can be understood as indexing a particular function in a function space and our goal should be to find the one that best represents the true <d-math>Q</d-math>-function.
+     Formally, if we can find a parameterisation <d-math>\omega^\star\in\Omega</d-math> such that <d-math>Q_{\omega^\star}(s,a)=\mathcal{B}[Q_{\omega^\star}](s,a)</d-math> where  <d-math>\mathcal{B}[Q^\pi](s,a)</d-math> is the Bellman operator:
+   </p>
+   <d-math block>
+     \begin{equation*}
+     \mathcal{B}[Q^\pi](s,a)=\mathbb{E}_{s'\sim P_S(s,a),r\sim P_R(s,a)}\left[r+\gamma \mathbb{E}_{a'\sim \pi(s')}\left[Q^\pi(s',a')\right]\right],
+     \end{equation*}
+   </d-math>
+   <p>
+     then by definition <d-math>Q_{\omega^\star}(s,a)=Q^{\pi}(s,a)</d-math> is a <d-math>Q</d-math>-function. To measure similarity between the two functions <d-math>Q_{\omega}(s,a)</d-math> and <d-math>\mathcal{B}[Q_{\omega}](s,a)</d-math>, we use the <d-math>\ell^2</d-math>-norm, which is commonly known as the the <i>mean squared Bellman error</i> (MSBE) in the RL literature:
+     <d-math block>
+       \begin{equation*}
+       \textrm{MSBE}(\omega)\coloneqq\left\Vert Q_{\omega}- \mathcal{B}[Q_{\omega}]\right\rVert^2_{d^\mu}=\mathbb{E}_{s,a\sim d^\mu(s,a)}\left[ (Q_{\omega}(s,a)- \mathcal{B}[Q_{\omega}](s,a))^2\right],
+       \end{equation*}
+     </d-math>  
+     where <d-math>d^\mu</d-math> is a sampling distribution over the state-action space and <d-math>\mu</d-math> is known as the sampling policy, which may be different from the target policy <d-math>\pi</d-math> (for example, <d-math>\mu</d-math> is typically an exploration policy).
+     Minimising the MSBE thus provides a tractable and intuitive objective for learning <d-math>Q</d-math>-functions.
+   </p>
+   <p>
+     From experience with supervised learning, we might be tempted to apply stochastic gradient descent (SGD) to minimise the MSBE, however taking gradients reveals a serious flaw with this approach when applied to model-free RL:
+   </p>
+   <d-math block>
+     \begin{align*}
+     \nabla_\omega\textrm{MSBE}&(\omega)\propto \\
+     &\mathbb{E}_{s,a\sim d^\mu}\left[\left(Q_\omega(s,a)-\mathcal{B}^\pi[Q_\omega](s,a)\right)\left(\nabla_\omega Q_\omega(s,a)-\nabla_\omega\mathcal{B}^\pi[Q_\omega](s,a)\right)\right].     
+     \end{align*}
+   </d-math> 
+   <p>Taking a closer look at the expanded gradient, we consider the term involving the product of two Bellman operators:</p>
+   <d-math block>
+     \begin{align*}
+     \mathcal{B}^\pi[&Q_\omega](s,a)\cdot \nabla_\omega\mathcal{B}^\pi[Q_\omega](s,a)\\
+     =&\mathbb{E}_{r\sim P_R(s,a),s'\sim P_S(s,a),a'\sim\pi(s')}\left[r+\gamma Q_\omega(s',a')\right]\cdot\mathbb{E}_{s''\sim P_S(s,a)a''\sim\pi(s'')}\left[\nabla_\omega Q_\omega(s'',a'')\right].     
+     \end{align*}
+   </d-math>  
+   <p>
+     To obtain an unbiased estimate of this term, which is required by SGD, we need to obtain two samples from the underlying state-transition distribution.
+     One for the first term in the product <d-math>s'\sim P_s(s,a)</d-math> and one for the second term in the product <d-math>s''\sim P_s(s,a)</d-math>.
+     In model-free RL, this requires returning to state <d-math>s</d-math> to obtain a second sample.
+     For most MDPs of interest, an agent cannot arbitrarily set the state it is in and so obtaining two state-transition samples is not possible.
+     This is formally known as the <i>double sampling problem</i> <a href="http://incompleteideas.net/book/the-book-2nd.html">[Sutton and Barto, 2018]</a> and prevents direct methods (methods that directly minimise the MSBE using SGD) from being applied in practice.
+   </p>
+   <p>
+     To get around this issue TD methods just ignore the problem, dropping the offending gradient term:
+   </p>
+   <d-math block>
+     \begin{align*}
+     \nabla_\omega\textrm{MSBE}&(\omega)\approx\\
+     &\mathbb{E}_{s,a\sim d^\mu}\left[\left(Q_\omega(s,a)-\mathcal{B}^\pi[Q_\omega](s,a)\right)\left(\nabla_\omega Q_\omega(s,a)-\color{red}\xcancel{\nabla_\omega\mathcal{B}^\pi[Q_\omega](s,a)}\color{black}\right)\right],    
+     \end{align*}
+   </d-math> 
+   <p>
+     and then apply SGD as if nothing has happened, yielding the TD update:
+   </p>
+   <d-math block>
+     \begin{equation*}
+     \omega_{t+1}=\omega_t+\alpha_t \left(r_t+\gamma Q_{\omega_t}(s'_t,a'_t)-Q_{\omega_t}(s_t,a_t) \right)\nabla_\omega Q_{\omega_t}(s_t,a_t),
+     \end{equation*}
+   </d-math> 
+   <p>
+     where samples are drawn from sampling distribution <d-math>s_t,a_t\sim d^\pi</d-math>, from the transition distribution <d-math>s'_t\sim P_S(s_t,a_t)</d-math> and the target policy <d-math>a'_t\sim \pi(s'_t)</d-math>.
+     Informally, as the parameters aren't updated using gradients and so won't always point 'downhill' in terms of the MSBE, we cannot guarantee that, on average, each update causes the parameters to move towards a minima.
+     This provides a precise answer to our first question:
+   </p>
+<p>
+ <b><font color="#F08080">  TD methods are fundamentally unstable because the TD update is no longer a stochastic gradient of the MSBE objective.</font></b>
+</p>
+
+
+
+
+<h1>Characterising Stability</h1>
+
+
+ <p>To explain TD's instability mathematically, we must first understand what parameter values we expect TD to converge to, if it is to converge at all.
+   We first introduce some notation. We define the TD error vector <d-math>\delta(\omega_t,\varsigma_t)</d-math> as:
+ </p>
+ <d-math block>
+   \begin{align*}
+   \delta(\omega_t,\varsigma_t)\coloneqq\left(r_t+\gamma Q_{\omega_t}(s'_t,a'_t)-Q_{\omega_t}(s_t,a_t) \right)\nabla_\omega Q_{\omega_t}(s_t,a_t),
+   \end{align*}
+ </d-math>
+ <p>
+ where <d-math>\varsigma_t\coloneqq (s_t,a_t,r_t,s_{t+1},a_{t+1})</d-math> is all the random variables (i.e. state, action, reward, next state, next action) bunched together in a single random variable for notational convenience.
+ The TD update then becomes:
+ <d-math block>
+   \begin{equation*}
+   \omega_{t+1}=\omega_t+\alpha_t \delta(\omega_t,\varsigma_t).
+   \end{equation*}
+ </d-math> 
+ We denote any parameter value that TD converges to as <d-math>\omega^\star</d-math>, which is known as a <i>TD fixed point</i>.
+ By definition, if <d-math>\omega_t=\omega^\star</d-math>, then the expected value of the parameter one timestep into the future <d-math>\omega_{t+1}</d-math> should also be <d-math>\omega^\star</d-math> or else the parameter cannot have converged.
+ Formalising this mathematically, any <d-math>\omega^\star</d-math> must satisfy:
+ </p>
+ <d-math block>
+   \begin{align*}
+   \omega^\star&=\mathbb{E}_{\varsigma_t}\left[ \omega_{t+1}\right],\\
+   &=\mathbb{E}_{\varsigma_t}\left[\omega^\star+\alpha_t\delta(\omega_t,\varsigma_t)\right],\\
+   &=\omega^\star+\alpha_t\mathbb{E}_{\varsigma_t}\left[\delta(\omega^\star,\varsigma_t)\right],\\
+   \implies  \mathbb{E}_{\varsigma_t}\left[\delta(\omega^\star,\varsigma_t)\right]&=0\ \textrm{for all } \omega^\star.
+   \end{align*}
+ </d-math> 
+This gives us a key condition that all TD fixed points satisfy:
+<d-math block>
+ \begin{align*}
+ \omega^\star\in \left\{\omega \big\vert \mathbb{E}_{\varsigma}\left[\delta(\omega,\varsigma)\right]=0  \right\}.
+ \end{align*}
+</d-math>
+<p>
+ Hence to characterise convergence, an intuitive approach is to measure how close successive <d-math>\omega_t</d-math>'s are to <d-math>\omega^\star</d-math>.
+ To measure closeness of  <d-math>\omega_t</d-math> and <d-math>\omega^\star</d-math>, we use the (squared) <d-math>\ell^2</d-math>-norm between each vector, giving a notion of convergence:
+ <d-math block>
+   \begin{align*}
+   \lim_{t\rightarrow\infty}\mathbb{E}\left[ \lVert \omega_t-\omega^\star\rVert^2\right]=0.\tag{1}
+   \end{align*}
+ </d-math>
+ It is worth pointing out that the convergence in Eq. (1) deals with the <i>expected</i> value of parameter updates, however TD updates are stochastic.
+   Using Markov's inequality we obtain a more intuitive notion of convergence:
+   <d-math block>
+     \begin{equation*}
+     \lim_{t\rightarrow\infty} \mathbb{P}\left(\lVert \omega_{t}-\omega^\star\rVert^2\ge \epsilon\right) \le \frac{1}{\epsilon} \lim_{t\rightarrow\infty}\mathbb{E}\left[ \lVert \omega_t-\omega^\star\rVert^2\right] .
+     \end{equation*}\tag{2}
+   </d-math>
+  Inequality (2) tells us that if we can show the expected updates converge in <d-math>\ell^2</d-math>-norm as in  Eq. (1), the updates will also converge in probability:
+   for any arbitrarily small <d-math>\epsilon>0</d-math>, the probability that <d-math>\lVert \omega_{t}-\omega^\star\rVert^2</d-math> is greater than <d-math>\epsilon</d-math> can be made arbitrarily small with increasing <d-math>t</d-math>.
+   Intuitively, this means that <d-math>\omega_{t}</d-math> and <d-math>\omega^\star</d-math> become close with arbitrarily high probability as the algorithm progresses.
+</p>
+<p>
+ Our method for tackling the convergence proof will be to show that the expected updates are a <i>contraction</i> mapping.
+ Precisely, we want to show that for small enough stepsizes <d-math>\alpha_t</d-math>:
+</p>
+</p>
+ <d-math block>
+   \begin{equation*}
+   \mathbb{E}\left[\lVert \omega_{t+1}-\omega^\star\rVert^2\right] <\mathbb{E}\left[ \lVert \omega_t-\omega^\star\rVert^2\right] \tag{3}.
+   \end{equation*}
+ </d-math>
+ <p>
+ The hand-wavey reason for this is that as time progresses, the stepsizes will tend towards zero, that is <d-math>\alpha_t\rightarrow 0</d-math>, and so  Ineq. 3 will eventually hold for all future timesteps.
+ This means every progressive update will get closer and closer to <d-math>\omega^\star</d-math>, characterising a regime of convergence.
+ The rate at which stepsizes must tend to zero to ensure convergence is governed by the Robbins-Munro <a href="https://arxiv.org/pdf/2407.04811">[Robbins and Munro, 1951]</a> conditions:
+ <d-math block>
+   \begin{equation*}
+   \sum_{t=0}^\infty \alpha_t =\infty,\quad \sum_{t=0}^\infty \alpha_t^2 <\infty.
+   \end{equation*}
+ </d-math>
+ The full mathematical details of the proof are given in Theorem 1 of our  <a href="https://arxiv.org/pdf/2407.04811">paper</a> and we give a sketch of this phenomenon in Figure 2 below.   
+ </p>
+ <p>
+  <h1>Analysing TD</h1>  
+ <p> </p>
+  <p>
+  Following our analysis in <a href="https://arxiv.org/pdf/2302.12537">[Fellows et al., 2023]</a> and <a href="https://arxiv.org/pdf/2407.04811">[Gallici et al., 2025]</a>, we now go ahead and derive a sufficient condition for Ineq. (3) to hold.
+  Our derivation relies on the ability to re-write the expected TD update to factor out <d-math>(\omega_t-\omega_0)</d-math>.
+  We do so using the fundamental theorem of calculus.
+   We start by expanding the expected <d-math>\ell^2</d-math>-norm to isolate the expected TD error vector:
+ </p>
+   <d-math block>
+     \begin{align*}
+     \mathbb{E}&\left[\lVert \omega_{t+1}-\omega^\star\rVert^2\right]=\mathbb{E}\left[\lVert \omega_t-\omega^\star\rVert^2 +2\alpha_t\delta(\omega_t,\varsigma_t)^\top (\omega_t-\omega^\star)+\alpha_t^2 \lVert\delta(\omega_t,\varsigma_t) \rVert ^2 \right],\\
+     &=\mathbb{E}\left[\lVert \omega_t-\omega^\star\rVert^2 +2\alpha_t\mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]^\top (\omega_t-\omega^\star)+\alpha_t^2 \mathbb{E}_{\varsigma_t}\left[ \lVert\delta(\omega_t,\varsigma_t) \rVert ^2\right] \right] \tag{4}.
+     \end{align*}
+   </d-math> 
+   <p>
+     where we have assumed that <d-math>\varsigma_t</d-math> is drawn i.i.d., like in a replay buffer.
+     It is also possible to assume that <d-math>\varsigma_t</d-math> is sampled from a Markov chain, as detailed in <a href=https://arxiv.org/abs/1806.02450> [Bhandari et al., 2018]</a>  and <a href="https://arxiv.org/pdf/2407.04811">[Gallici et al., 2025]</a> for nonlinear function approximators.
+     Writing the variance of the TD update vector as <d-math>\mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right]</d-math>, we can rewrite Eq. (4) in terms of the variance and expected TD update:
+   </p>  
+   <d-math block>
+     \begin{align*}
+     \mathbb{E}&\left[\lVert \omega_{t+1}-\omega^\star\rVert^2\right]=\mathbb{E}\Big[\lVert \omega_t-\omega^\star\rVert^2 +2\alpha_t\mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]^\top (\omega_t-\omega^\star)\\
+     &\qquad\qquad\qquad\qquad+\alpha_t^2 \left(\mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right] +\left\lVert \mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]\right\rVert^2 \right)\Big],\\
+     &=\mathbb{E}\left[\left\lVert\omega_t-\omega^\star+\alpha_t\mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]\right\rVert^2 +\alpha_t^2 \mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right]\right] \tag{5}.
+     \end{align*} 
+   </d-math> 
+ <p>
+   subtracting <d-math>\mathbb{E}_{\varsigma_t}\left[\delta(\omega^\star,\varsigma_t)\right]</d-math>, which by definition of the TD fixed point is zero:
+ </p>
+
+
+ </p>
+ <d-math block>
+   \begin{align*}
+   \mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]&=\mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]-\underbrace{\mathbb{E}_{\varsigma_t}\left[\delta(\omega^\star,\varsigma_t)\right]}_{=0},\\
+   &=\mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)-\delta(\omega^\star,\varsigma_t)\right].
+   \end{align*}
+ </d-math> 
+ <p>
+   To proceed, we consider the line joining <d-math>\omega_t</d-math> to <d-math>\omega^\star</d-math>, which we denote as <d-math>\ell(x)</d-math>:
+ </p>
+ <d-math block>
+   \begin{align*}
+     \ell(t)\coloneqq\omega_t-x(\omega_t-\omega^\star).
+   \end{align*}
+ </d-math> 
+   <p>
+     Observe that <d-math>\ell(x=0)=\omega_t</d-math> and <d-math>\ell(x=1)=\omega^\star</d-math>, allowing us to write the expected TD vector as:
+   </p>
+   <d-math block>
+     \begin{align*}
+     \mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]&=\mathbb{E}_{\varsigma_t}\left[\delta(\omega=\ell(x=0),\varsigma_t)-\delta(\omega=\ell(x=1),\varsigma_t)\right],\\
+     &=-\mathbb{E}_{\varsigma_t}\left[\left[\delta(\omega=\ell(x),\varsigma_t)\right]_{x=0}^1\right].
+     \end{align*}
+   </d-math>
+   <p>
+    Now, under the assumption that the parameter space is convex and that <d-math>\delta(\omega_t,\varsigma_t)</d-math> is continuous in <d-math>\omega</d-math>, we can apply the fundamental theorem of calculus to integrate across the line <d-math>\ell(x)</d-math> from <d-math>x=1</d-math> to  <d-math>x=0</d-math>, yielding:
+   </p>
+    <d-math block>
+     \begin{align*}
+     \mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]&=-\mathbb{E}_{\varsigma_t}\left[\int_{x=0}^1 \partial_x \delta(\omega=\ell(x),\varsigma_t)dx\right].
+     \end{align*}
+   </d-math>
+   <p>
+   Applying the chain rule and noting <d-math>\partial_x \ell(x)=-(\omega_t-\omega^\star)</d-math> allows us to tidy the update as:
+   </p>
+   <d-math block>
+     \begin{align*}
+     \mathbb{E}_{\varsigma_t}\left[\delta(\omega_t,\varsigma_t)\right]&=-\mathbb{E}_{\varsigma_t}\left[\int_{x=0}^1  \nabla_\omega \delta(\omega=\ell(x),\varsigma_t)\partial_x \ell(x) dx\right],\\
+     &=\mathbb{E}_{\varsigma_t}\left[\int_{x=0}^1 \nabla_\omega \delta(\omega=\ell(x),\varsigma_t) (\omega_t-\omega^\star)dx\right],\\
+     &=\int_{x=0}^1\mathbb{E}_{\varsigma_t}\left[ \nabla_\omega \delta(\omega=\ell(x),\varsigma_t)\right]dx(\omega_t-\omega^\star),\\
+     &=\int_{x=0}^1 J(\omega=\ell(x))dx(\omega_t-\omega^\star),
+     \end{align*}
+   </d-math>
+   <p>
+   where <d-math>J(\omega)\coloneqq \nabla_\omega  \mathbb{E}_{\varsigma_t}\left[\delta(\omega,\varsigma_t)\right]</d-math> is the TD Jacobian. Substituting into Eq. (5):
+   </p>
+   <d-math block>
+     \begin{align*}
+    \mathbb{E}\left[\lVert \omega_{t+1}-\omega^\star\rVert^2\right]&=\mathbb{E}\bigg[\left\lVert\left( I+\alpha_t \int_{x=0}^1 J(\omega=\ell(x),\varsigma_t)dx\right) ( \omega_t-\omega^\star)\right\rVert ^2\\
+    &\qquad+\alpha_t^2 \mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right]\bigg].\tag{6}
+     \end{align*}
+   </d-math>
+   <p>
+     We pause here to consider the meaning of the term  <d-math>\int_{x=0}^1 J(\omega=\ell(x))dx</d-math>.
+     We see that this is the average of all TD Jacobians along the line joining the point of interest to the fixed point and we thus refer to it as the <i>path-mean</i> Jacobian and give it a special notation:
+     <d-math block>
+       \bar{J}(\omega^\star)\coloneqq \int_{x=0}^1 J(\omega=\ell(x))dx.
+     </d-math>
+   </p>
+   <p>
+    Finally, to derive the conditions required for stability of the update, we use the following result:
+   </p>
+   <d-math block>
+     \begin{align*}
+    &\textrm{\textbf{Lemma:} Let }  M \textrm{ be a matrix, } b\textrm{ a positive scalar and } v \textrm{ a test vector that are all}\\
+    & \textrm{bounded in square } \ell^2 \textrm{-norm. If } M \textrm{ is negative definite, there exists some }  \alpha'\\
+    & \textrm{such that:} \\
+    &\qquad\qquad\qquad\qquad\qquad\left\lVert(I+\alpha M)v\right\rVert^2 +\alpha^2 b<  \left\lVert v\right\rVert^2 ,\\
+     &\textrm{for all } 0<\alpha\le\alpha'. \textrm{ If } M \textrm{ is positive semidefinite, then}\\
+     &\qquad\qquad\qquad\qquad\qquad\left\lVert(I+\alpha M)v\right\rVert^2 +\alpha^2 b\ge  \left\lVert v\right\rVert^2 ,\\
+     &\textrm{for all } 0\le\alpha.
+     \end{align*}
+   </d-math>
+   <p>
+     We encourage the reader to prove this result for themselves before revealing the following proof, but won't blame them too much for peeking:
+   </p>
+ <button type="button" class="collapsible" ><i>CLICK TO REVEAL PROOF!</i></button>
+ <div class="content">
+   <p>
+     We start by expanding the square norm:
+   </p>
+   <d-math block>
+     \begin{align*}
+       \left\lVert(I+\alpha M)v\right\rVert^2 +\alpha^2 b=\left\lVert v\right\rVert^2 +2\alpha v^\top M v + \alpha^2 \left(\left\lVert  Mv \right\rVert^2 +b\right),      
+     \end{align*}
+   </d-math>
+   <p>
+     Hence to prove our first result, we must show:
+   </p>
+   <d-math block>
+     \begin{align*}
+      \left\lVert v\right\rVert^2 +2\alpha v^\top M v + \alpha^2 \left(\left\lVert  Mv \right\rVert^2 +b\right)&<\left\lVert v\right\rVert^2 ,\\
+      \implies 2\alpha v^\top M v + \alpha^2 \left(\left\lVert  Mv \right\rVert^2 +b\right)&<0,\\
+      \implies 2 v^\top M v  &<-\alpha\left(\left\lVert  Mv \right\rVert^2 +b\right),\\
+     \end{align*}
+   </d-math>
+   <p>
+   Now as, <d-math>M </d-math>, <d-math>v </d-math> and <d-math>b </d-math> are all bounded in the square <d-math>\ell^2 </d-math>-norm, there exists some finite, positive constant <d-math>k</d-math> such that <d-math>\left\lVert  Mv \right\rVert^2 +b\le k</d-math>, hence it suffices to show:
+
+
+   </p>
+   <d-math block>
+     \begin{align*}
+       v^\top M v  &<-\frac{\alpha k}{2},\tag{7}
+     \end{align*}
+   </d-math>
+   <p> When <d-math>M</d-math> is negative definite, <d-math>v^\top M v<0</d-math>, hence there always exists some <d-math>\alpha'</d-math> such that Inequality (7) holds for all <d-math>0<\alpha\le\alpha'</d-math>, as required.
+   </p>
+   <p>We now prove the final result. A similar derivation reveals we must show:</p>
+   <d-math block>
+     \begin{align*}
+      0\le 2\alpha v^\top M v + \alpha^2 \left(\left\lVert  Mv \right\rVert^2 +b\right).\tag{8}
+     \end{align*}
+   </d-math>
+   <p> When <d-math>M</d-math> is positive definite, <d-math>v^\top M v\ge 0</d-math>, and as all other quantities are positive, Inequality (8) must hold for all <d-math>0 \le\alpha</d-math>
+   </p>
+ </div>
+<p>
+To apply our <d-math>\textrm{\textbf{Lemma}}</d-math>, we need to make the assumption that the variance of the TD update vector is finite, the path-mean Jacobian is finite in <d-math>\ell^2</d-math>-norm and the parameter space is also bounded.
+These three assumptions are mild and as we discuss in <a href="https://arxiv.org/abs/2407.04811">our most recent paper</a>, no algorithm of practical value should violate them.
+</p>
+ <p>
+<d-math>\textrm{\textbf{Lemma}}</d-math> reveals that the key ingredient for provably stable TD is the negative definiteness of the path-mean Jacobian:
+</p>
+<d-math block>
+ \begin{align*}
+   v^\top \bar{J}(\omega^\star) v  &<0,
+ \end{align*}
+</d-math>
+<p>
+ for a unit test vector <d-math>v</d-math>, as applying the  <d-math>\textrm{\textbf{Lemma}}</d-math> under this condition to Eq. (6) with <d-math>M=\bar{J}(\omega^\star), b= \mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right]</d-math> and  <d-math>\alpha=\alpha_t</d-math>
+ means there will exists some timestep <d-math>t'</d-math> such that for all <d-math>t>t'</d-math> such that:
+</p>
+<d-math block>
+ \begin{align*}
+ \mathbb{E}\left[\lVert \omega_{t+1}-\omega^\star\rVert^2\right] &\le \mathbb{E}\bigg[\left\lVert\left( I+\alpha_t \bar{J}(\omega^\star,\varsigma_t)\right) ( \omega_t-\omega^\star)\right\rVert ^2+\alpha_t^2 \mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right]\bigg], \\
+ &< \mathbb{E}\left[ \lVert \omega_t-\omega^\star\rVert^2\right].
+ \end{align*}
+</d-math>
+<p>
+ hence Ineq. (3) holds as the updates are a contraction mapping.
+</p>
+<p>
+ The <d-math>\textrm{\textbf{Lemma}}</d-math>  also offers insights into TD's instability;  if the path-mean Jacobian is positive-definite everywhere, then TD is provably divergent as successive updates will progressively get further from the set of fixed points.
+ This fact can be used to generate counterexample MDPs where TD will diverge [<a href="https://www.sciencedirect.com/science/article/abs/pii/B978155860377650013X">Baird, 1995</a>, <a href="https://ieeexplore.ieee.org/document/580874">Tsitsiklis et al., 1997</a>].
+ In practice, TD may still be convergent if the the path-mean Jacobian is only locally negative definite across the parameter space.
+ These results generalise conditions from optimisation theory where the local convexity of the parameter space is determined by the definiteness of the Hessian.
+</p>
+
+
+<div class="centered-content-container" >
+ <figure>
+   <img src="dist/img/geometric_interpretation.png" >
+   <figcaption style="text-align: center;">Figure 2: Left - Contraction mapping associated with a negative definite Jacobian. Right - non-contraction mapping associated with a positive definite Jacobian. The grey ball represents the region of contraction.</figcaption>
+ </figure>
+</div>
+
+
+ <p>
+   So how do we use this result in practice? For linear <d-math>Q</d-math>-function approximators of the form: <d-math>Q_\omega(s,a)=\phi(s,a)^\top \omega</d-math> where <d-math>\phi(s,a)</d-math> is a feature vector, the Jacobian is independent of <d-math>\omega</d-math> and so the path-mean Jacobian is constant.
+   For the linear case, this means that the stability of TD is completely determined by the Jacobian's negative definiteness, as it is constant for the entire parameter space.
+   This allows us to analyse the stability of TD a priori to derive conditions that will always lead to convergence.
+   For the nonlinear case, it is generally not possible to evaluate the line integral in calculating the path-mean Jacobian as it requires knowing the fixed point, so instead we can take the maximum value over the integral to derive a simpler condition: 
+ </p>
+ <div id="rcornersbox">
+ <p >
+   <b><i>TD Stability Criterion:</i></b> 
+ </p>
+ <p>    The TD stability criterion holds if the TD Jacobian <d-math>J(\omega)\coloneqq \nabla_\omega  \mathbb{E}_{\varsigma_t}\left[\delta(\omega,\varsigma_t)\right]</d-math> is negative definite, that is:
+   <d-math>v^\top J(\omega)v<0</d-math> for any unit test vector  <d-math>\lVert v\rVert=1</d-math>  and <d-math>\omega\in\Omega</d-math>.
+ </p>
+</div>
+We cannot understate the importance of the TD Jacobian as a tool to analyse TD algorithms and develop methods that are provably stable.
+This provides a concrete answer to Question II, that is : Can we understand TD's instability mathematically?
+
+
+<p>
+ <b><font color="#5F9EA0">  The negative or positive definiteness of the TD Jacobian can determine the stability or instability of TD algorithms</font></b>
+</p>
+
+
+<h1>What's Next?</h1>
+<p>
+ We have shown that the TD Jacobian is a powerful tool for analysing the stability of TD algorithms. It can also guide us in our design of algorithms that are provably stable.
+ If we can show that an architecture leads to negative definiteness of the Jacobian, even in a limit, we know that deploying the algorithm will be safe and stable.
+ In Part II of our blog, we develop this idea formally, showing that the simple application of regularisation to the <d-math>Q</d-math>-function approximator can transform an unstable architecture into a stable one.
+ See you there! 
+</p>
+
+
+
+
+<h3>Citation</h3>
+   <p>
+   For attribution in academic contexts, please cite this blog as:
+   </p>
+   <pre class="citation long">
+   @misc{Fellows2025fixingtdi,
+     title={Fixing TD Pt I: Why is Temporal Difference Learning so Unstable?},
+     author={Mattie Fellows},
+     journal={Foerster Lab for AI Research (FLAIR)},
+     year={2025}
+   }
+   </pre>
+   <p>
+     and the corresponding papers as:
+     </p>
+     <pre class="citation long">
+       @article{Fellows23why,
+         author = {Mattie Fellows and Matthew J.A. Smith and Shimon Whiteson},
+         journal = {International Conference on Machine Learning (ICML)},
+         title = {Why Target Networks Stabilise Temporal Difference Methods},
+         url={https://arxiv.org/pdf/2302.12537},
+         year = {2023}
+       }
+       @article{Gallici25simplifying,
+         title={Simplifying Deep Temporal Difference Learning},
+         author={Matteo Gallici and Mattie Fellows and Benjamin Ellis
+           and Bartomeu Pou and Ivan Masmitja and Jakob Nicolaus Foerster
+            and Mario Martin},
+         year={2025}, 
+         eprint={2407.04811},
+         journal={The International Conference on Learning Representations (ICLR)},
+         primaryClass={cs.LG},
+         url={https://arxiv.org/abs/2407.04811},
+       }
+       </pre>
+
+
+   <d-bibliography src="dist/bibliography.bib"></d-bibliography>
+
+
+ <script>
+ var coll = document.getElementsByClassName("collapsible");
+ var i;
+  for (i = 0; i < coll.length; i++) {
+   coll[i].addEventListener("click", function() {
+     this.classList.toggle("active");
+     var content = this.nextElementSibling;
+     if (content.style.display === "block") {
+       content.style.display = "none";
+     } else {
+       content.style.display = "block";
+     }
+   });
+ }
+ </script>
+ </d-article>
+  </body>
+ </html>
+
