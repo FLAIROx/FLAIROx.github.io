@@ -110,7 +110,7 @@
 
 
    <p>
- In  <a href="https://blog.foersterlab.com/fixing-td-part-1">Part I</a> of this blog, we characterised the stability of TD through the TD Jacobian.
+ In  <a href="file:///Users/matows/Documents/GitHub/PQN_Blog/Part_I%20/index.html">Part I</a> of this blog, we characterised the stability of TD through the TD Jacobian.
  In this part, we now build on this analysis to better understand the reasons for instability before proposing a surprisingly simple architectural solution that can stabilise TD.
  By the end of this blog, readers will be able to understand the answers to the following two questions in detail:
    </p>
@@ -127,7 +127,7 @@
    \mathcal{M} \coloneqq \left\langle \mathcal{S},\mathcal{A},P_0, P_S(s,a), P_R(s,a), \gamma\right\rangle,
    \end{equation*}
  </d-math>
-  where <d-math> \mathcal{S}</d-math>  and <d-math>\mathcal{a}</d-math> are the state and action spaces, <d-math>P_0</d-math> is the initial state distribution, <d-math>P_S(s,a)</d-math> and <d-math>P_R(s,a)</d-math> are the state and reward transition distributions and <d-math>\gamma</d-math> is a discount factor.
+  where <d-math> \mathcal{S}</d-math>  and <d-math>\mathcal{A}</d-math> are the state and action spaces, <d-math>P_0</d-math> is the initial state distribution, <d-math>P_S(s,a)</d-math> and <d-math>P_R(s,a)</d-math> are the state and reward transition distributions and <d-math>\gamma</d-math> is a discount factor.
   In addition, we also assume some familiarity with stationary distributions and Markov chains, vector calculus and linear algebra.
   </p>
   <p>   We have tried to make this blog as accessible as possible for less theoretically inclined readers. For readers who wish to skip its contents and just understand our stable parallelised deep Q-learning algorithm (PQN) from a practical perspective, we have a separate blog <a href="https://mttga.github.io/posts/pqn/" >here</a>.
@@ -156,7 +156,7 @@
      \end{align*}
    </d-math>
    <p>
-   Here <d-math>\varsigma_t\coloneqq (s_t,a_t,r_t,s_{t+1},a_{t+1})</d-math> denotes all the random variables (i.e. state, action, reward, next state, next action) bunched together in a single random variable for notational convenience.
+   Here <d-math>\varsigma_t\coloneqq (s_t,a_t,r_t,s_t',a_t')</d-math> denotes all the random variables (i.e. state, action, reward, next state, next action) bunched together in a single random variable for notational convenience.
    We denote the sampling distribution for state-actions as <d-math>d^\mu</d-math>, where <d-math>\mu</d-math> denotes the sampling policy.
    Recall our goal was to obtain a simple mathematical tool that can be used to determine the stability of the TD update in Eq. (1).
    We found that stability can be determined by whether or not the TD Jacobian was negative or positive definite, giving rise to the TD stability criterion:
@@ -165,7 +165,7 @@
        <b><i>TD Stability Criterion:</i></b> 
      </p>
      <p>    The TD stability criterion holds if the TD Jacobian <d-math>J(\omega)\coloneqq \nabla_\omega  \mathbb{E}_{\varsigma_t}\left[\delta(\omega,\varsigma_t)\right]</d-math> is negative definite, that is:
-       <d-math>v^\top J(\omega)v<0</d-math> for any unit test vector  <d-math>\lVert v\rVert=1</d-math>  and <d-math>\omega\in\Omega</d-math>.
+       <d-math>v^\top J(\omega)v<0</d-math> for any test vector  <d-math> v</d-math>  and <d-math>\omega\in\Omega</d-math>.
      </p>
    </div>
    </p>
@@ -173,7 +173,7 @@
    <h1>The Deadly Triad</h1>
    <p>
      In Part I, we briefly mentioned that there exist known counterexamples demonstrating that TD is provably divergent for nonlinear function approximators and/or off-policy data [<a href="https://www.sciencedirect.com/science/article/abs/pii/B978155860377650013X">Baird, 1995</a>, <a href="https://ieeexplore.ieee.org/document/580874">Tsitsiklis et al., 1997</a>].
-     This combination of bootstrapping, off-policy data and function approximation is known as the 'deadly triad' [<a href="http://incompleteideas.net/book/the-book-2nd.html">Sutton and Barto, 2018</a>,<a href="https://arxiv.org/pdf/1812.02648">van Hasselt et al., 2018</a>].
+     This combination of bootstrapping, off-policy data and function approximation is known as the 'deadly triad' [<a href="http://incompleteideas.net/book/the-book-2nd.html">Sutton and Barto, 2018</a>, <a href="https://arxiv.org/pdf/1812.02648">van Hasselt et al., 2018</a>].
      As our TD Jacobian characterises the stability of TD, we should expect it to be able to explain the deadly triad.
      We now show that this is indeed the case, and the deadly triad emerges quite naturally from plugging in the TD update in Eq. (1) into the TD stability criterion:
    </p>
@@ -184,7 +184,7 @@
      \end{align*}
    </d-math>
    <p>
-     We give a full derivation of this result below, however to best understand the nonlinear and off-policy aspects of the deadly triad, we <i>highly encourage</i> readers to derive it for themselves:
+     We give a full derivation of this result below, however to best understand the nonlinear and off-policy aspects of the deadly triad, we <i>really encourage</i> readers to derive it for themselves:
    </p>
  <button type="button" class="collapsible" ><i>CLICK TO REVEAL PROOF!</i></button>
  <div class="content">
@@ -313,7 +313,7 @@ Crucially, if <d-math>d^\pi</d-math> is a stationary distribution of the MDP, fo
  </d-math>
 </div>
 <p>
- Because <d-math>\gamma<1</d-math> by definition, Ineq. (8) implies that Ineq. (6) holds, and so the off-policy component of the TD stability criterion is automatically satisfied, that is:
+ Because <d-math>\gamma<1</d-math> by definition, Ineq. (8) implies that Ineq. (6) holds, and so the off-policy component of the TD stability criterion is automatically satisfied when sampling on-policy from the stationary distribution, that is:
 </p>
 <d-math block>
  \begin{align*}
@@ -321,11 +321,12 @@ Crucially, if <d-math>d^\pi</d-math> is a stationary distribution of the MDP, fo
 \end{align*}
 </d-math>
 <p>
- Unfortunately, the assumption that TD is updated by sampling from the MDPs stationary distribution is not practical for two reasons:
+ Unfortunately, the assumption that TD is updated by sampling from the MDP's stationary distribution is not practical for two reasons:
  firstly, in learning problems some degree of exploration is needed so that TD updates cover a diverse space of state-action-reward-state observations, and so updates are typically sampled from an exploration policy <d-math>\mu\ne \pi</d-math> that differs from the target policy;
  secondly, even if on-policy sampling is carried out, the rate at which the sampling distribution converges to the stationary distribution of the Markov chain may be slow, meaning that for the finite timescales over which practical algorithms run, the actual sampling distribution may be far from the stationary distribution.
  Algorithms like <d-math>Q</d-math>-learning in particular are inherently off-policy, and it is possible to construct MDPs like Baird's counterexample [<a href="https://www.sciencedirect.com/science/article/abs/pii/B978155860377650013X">Baird, 1995</a>] for which <d-math>\mathcal{C}_\textrm{OffPolicy}(Q_\omega,d^{\mu})>0</d-math>, leading to provably divergent algorithms.
  As such, we conclude that <d-math>\mathcal{C}_\textrm{OffPolicy}(Q_\omega,d^{\mu})</d-math> measures the degree of distributional shift of the sampling distribution from the station distribution that TD can tolerate before becoming unstable.
+  We now isolate at the remaining term of Ineq. (3), which governs the nonlinear instability of TD:
 </p>
 <p>
  <b><font color="#602050">  Nonlinear Instability: </font></b> We define the nonlinear component of the TD stability criterion as:
@@ -336,7 +337,7 @@ Crucially, if <d-math>d^\pi</d-math> is a stationary distribution of the MDP, fo
  \end{align*}
 </d-math>
 <p>
- Examining Eq. (9) reveals that the nonlinear component of the TD stability condition does not apply for linear function approximators as second order derivatives are zero: $\nabla_\phi^2 Q_\phi(x)=0$, hence <d-math>\mathcal{C}_\textrm{Nonlinear}(Q_\omega)=0</d-math>.
+ Examining Eq. (9) reveals that the nonlinear component of the TD stability condition does not apply for linear function approximators as second order derivatives are zero: <d-math>\nabla_\phi^2 Q_\phi(x)=0</d-math>, hence <d-math>\mathcal{C}_\textrm{Nonlinear}(Q_\omega)=0</d-math>.
  In the nonlinear case, <d-math>\mathcal{C}_\textrm{Nonlinear}(Q_\omega)</d-math> can be arbitrarily positive depending upon the specific MDP and choice of function approximator.
  Hence <i>nonlinearity</i> is a key source of instability in TD which is characterised by <d-math>\mathcal{C}_\textrm{Nonlinear}(Q_\omega)</d-math>
 </p>
@@ -362,7 +363,7 @@ Crucially, if <d-math>d^\pi</d-math> is a stationary distribution of the MDP, fo
    \end{align*}
 </d-math>
 <p>
-where <d-math>x\coloneqq \textrm{Vec}(s,a)</d-math> is a <d-math>d</d-math>-dimensional input vector formed of the state-actions, <d-math>\omega= [w^\top,\textrm{Vec}(M)^\top]</d-math> is the parameter vector where <d-math>M\in\mathbb{R}^{k\times d}</d-math> is a <d-math>k\times d</d-math> matrix where each row <d-math>\lVert m_i\rVert</d-math>  is bounded, <d-math>w\in\mathbb{R}^k</d-math> is a vector of final layer weights where <d-math>\lVert \rVert</d-math> is bounded and <d-math>\sigma_\textrm{Pre}</d-math> and <d-math>\sigma_\textrm{Post}</d-math> are element-wise <d-math>C^2</d-math>-continuous activations with bounded 2nd order derivatives.
+where <d-math>x\coloneqq \textrm{Vec}(s,a)</d-math> is a <d-math>d</d-math>-dimensional input vector formed of the state-actions, <d-math>\omega= [w^\top,\textrm{Vec}(M)^\top]</d-math> is the parameter vector where <d-math>M\in\mathbb{R}^{k\times d}</d-math> is a <d-math>k\times d</d-math> matrix where each row <d-math>\lVert m_i\rVert</d-math>  is bounded, <d-math>w\in\mathbb{R}^k</d-math> is a vector of final layer weights where <d-math>\lVert w\rVert</d-math> is bounded and <d-math>\sigma_\textrm{Pre}</d-math> and <d-math>\sigma_\textrm{Post}</d-math> are element-wise <d-math>C^2</d-math>-continuous activations with bounded 2nd order derivatives.
 We assume the final activation <d-math>\sigma_\textrm{Post}</d-math> is <d-math>L_\textrm{Post}</d-math>-Lipschitz with <d-math>\sigma_\textrm{Post}(0)=0</d-math>, (e.g. tanh, identity, GELU, ELU...).
 LayerNorm [<a href="https://arxiv.org/pdf/1607.06450">Ba et al., 2016</a>] is defined element-wise as:
 </p>
@@ -372,8 +373,10 @@ LayerNorm [<a href="https://arxiv.org/pdf/1607.06450">Ba et al., 2016</a>] is de
    \end{align*}
 </d-math>
 <p>where <d-math>\epsilon</d-math> is a small constant introduced for numerical stability. Deeper networks with more LayerNorm layers may be used in practice, however our analysis reveals that only the final layer weights affect the stability of TD with wide LayerNorm neural networks.
- So why should we expect LayerNorm to stabilise TD?
- The key insight is that the LayerNorm operator rescales the input according to a standard Gaussian, hence if weights in any part of the network before the LayerNorm start to grow, their effect will be countered through the variance term on denominator of Eq. (10) and will not cause the final output of the network to grow accordingly.
+ </p>
+ <p>
+  So why should we expect LayerNorm to stabilise TD?
+ The key insight is that the LayerNorm operator rescales the input according to a standard Gaussian, hence if weights in any part of the network before the LayerNorm start to grow, their effect will be countered through the variance term in the denominator of Eq. (10) and will not cause the final output of the network to grow accordingly.
  This arises from the <i>normalising</i> property of the LayerNorm layer.
  We should expect this property to discourage any part of the network from growing without bound, especially as <d-math>k</d-math> increases and the empirical mean and standard deviations in Eq. (10) approach their true expectations, thereby increasing the degree of normalisation provided.
   In our <a href="https://arxiv.org/pdf/2407.04811">paper</a> we formally investigate this property, showing that the off-policy and nonlinear components of the TD stability condition can be bounded as:
@@ -393,7 +396,7 @@ The nonlinear bound in Ineq. (12) can be explained using established theory of w
 
 As we outlined in the previous section, linear function approximators still suffer from off-policy instability due the distributional shift between <d-math>\pi</d-math> and <d-math>\mu</d-math>.
 Because of this, linearisation of wide networks alone cannot explain the bound in Ineq. (11).
-As we already alluded to, our proof for reveals this bound is due to the normalising property of LayerNorm, which upper bounds the expected norm: <d-math>\mathbb{E}_{x\sim d^\mu}\left[\left\lVert\textrm{LayerNorm}^k[Mx]\right\rVert \right]\le 1</d-math> <i>regardless of the sampling distribution<d-math>d^\mu</d-math></i>  or <i>magnitude of <d-math>M</d-math></i>.
+As we already alluded to, our proof reveals this bound is due to the normalising property of LayerNorm, which upper bounds the expected norm: <d-math>\mathbb{E}_{x\sim d^\mu}\left[\left\lVert\textrm{LayerNorm}^k[Mx]\right\rVert \right]\le 1</d-math> <i>regardless of the sampling distribution<d-math>d^\mu</d-math></i>  or <i>magnitude of <d-math>M</d-math></i>.
 This yields a bound with a residual term of <d-math>\left\lVert v_w \cdot\frac{ \gamma L_\textrm{Post} }{2}\right\rVert^2</d-math> that is independent of <d-math>\pi</d-math> and <d-math>\mu</d-math>, overcoming the distributional shift issue responsible for off-policy instability.
 </p>
 <p>
@@ -448,7 +451,7 @@ We formally confirm this intuition in the following theorem, assumptions and a f
 <p>
  Recall from our first blog, we showed empirically how deep <d-math>Q</d-math>-learning (that is, DQN without a target network or replay buffer) is too unstable to be used in even simple domains.
  In our theoretical analysis, we developed a regularised TD update (Eq. (13)) that is provably stable for some finite network width.
- As an empirical demonstration, we now repeat the same experiment to show how the introduction of LayerNorm and <d-math>\ell^2</d-math>-regularisation yields a simple and stable deep <d-math>Q</d-math>-learning algorithm that can be applied in practice.
+ As an empirical demonstration, we now repeat the same experiment to show how the introduction of LayerNorm yields a simple and stable deep <d-math>Q</d-math>-learning algorithm that can be applied in practice.
  We plot results in Figs. 2-4 below, comparing CleanRL's DQN <a href="https://arxiv.org/pdf/2111.08819">[Huang et al., 2021]</a> with the target network and replay buffer removed to CleanRL's implementation of our PQN algorithm for a single environment interaction at each timestep with no buffer and without <d-math>\lambda</d-math>-returns, thereby recovering a regularised deep <d-math>Q</d-math>-learning algorithm without a replay buffer or target network.
 </p>
 
@@ -502,7 +505,7 @@ We formally confirm this intuition in the following theorem, assumptions and a f
 <p>
  In this blog, we have shown that the deadly triad arises naturally from our TD stability criterion, which can be separated into a nonlinear and off-policy component.
  Although the deadly triad seemed like a fatal blow for simple and stable TD algorithms, we showed that introducing LayerNorm regularisation alongside <d-math>\ell^2</d-math>-regularisation into the TD update offers a simple but powerful solution with provable convergence guarantees.
- In our next blog, show how our stable <d-math>Q</d-math>-learning update can unlocks the power of parallelised computation for RL, allowing us to develop a state-of-the-art parallelised <d-math>Q</d-math>-learning algorithm (PQN) that is several times faster than traditional DQN with improved sample efficiency.
+ In our next <a href="https://mttga.github.io/posts/pqn/" >blog</a>, we show how our stable <d-math>Q</d-math>-learning update can unlocks the power of parallelised computation for RL, allowing us to develop a state-of-the-art parallelised <d-math>Q</d-math>-learning algorithm (PQN) that is several times faster than traditional DQN with improved sample efficiency.
  See you  <a href="https://mttga.github.io/posts/pqn/" >there</a>!
 </p>
 
@@ -567,3 +570,4 @@ We formally confirm this intuition in the following theorem, assumptions and a f
  </d-article>
   </body>
  </html>
+
