@@ -326,7 +326,7 @@ This gives us a key condition that all TD fixed points satisfy:
  <p> </p>
   <p>
   Following our analysis in <a href="https://arxiv.org/pdf/2302.12537">[Fellows et al., 2023]</a> and <a href="https://arxiv.org/pdf/2407.04811">[Gallici et al., 2025]</a>, we now go ahead and derive a sufficient condition for Ineq. (3) to hold.
-  Our derivation relies on the ability to re-write the expected TD update to factor out <d-math>(\omega_t-\omega_0)</d-math>.
+  Our derivation relies on the ability to re-write the expected TD update to factor out <d-math>(\omega_t-\omega^\star)</d-math>.
   We do so using the fundamental theorem of calculus.
    We start by expanding the expected <d-math>\ell^2</d-math>-norm to isolate the expected TD error vector:
  </p>
@@ -338,7 +338,7 @@ This gives us a key condition that all TD fixed points satisfy:
    </d-math> 
    <p>
      where we have assumed that <d-math>\varsigma_t</d-math> is drawn i.i.d., like in a replay buffer.
-     It is also possible to assume that <d-math>\varsigma_t</d-math> is sampled from a Markov chain, as detailed in <a href=https://arxiv.org/abs/1806.02450> [Bhandari et al., 2018]</a>  and <a href="https://arxiv.org/pdf/2407.04811">[Gallici et al., 2025]</a> for nonlinear function approximators.
+     It is also possible to assume that <d-math>\varsigma_t</d-math> is sampled from a Markov chain, as detailed in <a href=https://arxiv.org/abs/1806.02450> [Bhandari et al., 2018]</a> for linear function approximators and <a href="https://arxiv.org/pdf/2407.04811">[Gallici et al., 2025]</a> for nonlinear function approximators.
      Writing the variance of the TD update vector as <d-math>\mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right]</d-math>, we can rewrite Eq. (4) in terms of the variance and expected TD update:
    </p>  
    <d-math block>
@@ -475,7 +475,7 @@ To apply our <d-math>\textrm{\textbf{Lemma}}</d-math>, we need to make the assum
 These three assumptions are mild and as we discuss in <a href="https://arxiv.org/abs/2407.04811">our most recent paper</a>, no algorithm of practical value should violate them.
 </p>
  <p>
-<d-math>\textrm{\textbf{Lemma}}</d-math> reveals that the key ingredient for provably stable TD is the negative definiteness of the path-mean Jacobian:
+The <d-math>\textrm{\textbf{Lemma}}</d-math> reveals that the key ingredient for provably stable TD is the negative definiteness of the path-mean Jacobian:
 </p>
 <d-math block>
  \begin{align*}
@@ -483,8 +483,8 @@ These three assumptions are mild and as we discuss in <a href="https://arxiv.org
  \end{align*}
 </d-math>
 <p>
- for a unit test vector <d-math>v</d-math>, as applying the  <d-math>\textrm{\textbf{Lemma}}</d-math> under this condition to Eq. (6) with <d-math>M=\bar{J}(\omega^\star), b= \mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right]</d-math> and  <d-math>\alpha=\alpha_t</d-math>
- means there will exists some timestep <d-math>t'</d-math> such that for all <d-math>t>t'</d-math> such that:
+ for a test vector <d-math>v</d-math>, as applying the  <d-math>\textrm{\textbf{Lemma}}</d-math> under this condition to Eq. (6) with <d-math>M=\bar{J}(\omega^\star), b= \mathbb{V}_{\varsigma_t}\left[ \delta(\omega_t,\varsigma_t)\right]</d-math> and  <d-math>\alpha=\alpha_t</d-math>
+ means there will exists some timestep <d-math>t'</d-math> such that for all <d-math>t>t'</d-math>:
 </p>
 <d-math block>
  \begin{align*}
@@ -522,10 +522,10 @@ These three assumptions are mild and as we discuss in <a href="https://arxiv.org
    <b><i>TD Stability Criterion:</i></b> 
  </p>
  <p>    The TD stability criterion holds if the TD Jacobian <d-math>J(\omega)\coloneqq \nabla_\omega  \mathbb{E}_{\varsigma_t}\left[\delta(\omega,\varsigma_t)\right]</d-math> is negative definite, that is:
-   <d-math>v^\top J(\omega)v<0</d-math> for any unit test vector  <d-math>\lVert v\rVert=1</d-math>  and <d-math>\omega\in\Omega</d-math>.
+   <d-math>v^\top J(\omega)v<0</d-math> for any test vector  <d-math>\lVert v\rVert=1</d-math>  and <d-math>\omega\in\Omega</d-math>.
  </p>
 </div>
-We cannot understate the importance of the TD Jacobian as a tool to analyse TD algorithms and develop methods that are provably stable.
+The TD stability criterion offers a simple but powerful method to understand the behaviour of TD. We cannot understate the importance of the TD Jacobian as a tool to analyse TD algorithms and develop methods that are provably stable.
 This provides a concrete answer to Question II, that is : Can we understand TD's instability mathematically?
 
 
@@ -603,3 +603,4 @@ This provides a concrete answer to Question II, that is : Can we understand TD's
  </d-article>
   </body>
  </html>
+
