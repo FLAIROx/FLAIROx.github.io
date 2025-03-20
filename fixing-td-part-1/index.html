@@ -233,7 +233,7 @@
      \end{equation*}
    </d-math> 
    <p>
-     where samples are drawn from sampling distribution <d-math>s_t,a_t\sim d^\pi</d-math>, from the transition distribution <d-math>s'_t\sim P_S(s_t,a_t)</d-math> and the target policy <d-math>a'_t\sim \pi(s'_t)</d-math>.
+     where samples are drawn from sampling distribution <d-math>s_t,a_t\sim d^\mu</d-math>, from the transition distribution <d-math>s'_t\sim P_S(s_t,a_t)</d-math> and the target policy <d-math>a'_t\sim \pi(s'_t)</d-math>.
      Informally, as the parameters aren't updated using gradients and so won't always point 'downhill' in terms of the MSBE, we cannot guarantee that, on average, each update causes the parameters to move towards a minima.
      This provides a precise answer to our first question:
    </p>
