@@ -159,7 +159,7 @@
    Here <d-math>\varsigma_t\coloneqq (s_t,a_t,r_t,s_t',a_t')</d-math> denotes all the random variables (i.e. state, action, reward, next state, next action) bunched together in a single random variable for notational convenience.
    We denote the sampling distribution for state-actions as <d-math>d^\mu</d-math>, where <d-math>\mu</d-math> denotes the sampling policy.
    Recall our goal was to obtain a simple mathematical tool that can be used to determine the stability of the TD update in Eq. (1).
-   We found that stability can be determined by whether or not the TD Jacobian was negative or positive definite, giving rise to the TD stability criterion:
+   Building on analysis by <a href="https://www.mit.edu/~jnt/Papers/J063-97-bvr-td.pdf">[Tsitsiklis and Van Roy, 1997]</a> and  <a href="https://arxiv.org/pdf/1806.02450">[Bhandari et al., 2018]</a>, we found that stability can be determined by whether or not the TD Jacobian was negative or positive definite, giving rise to the TD stability criterion:
    <div id="rcornersbox">
      <p >
        <b><i>TD Stability Criterion:</i></b> 
