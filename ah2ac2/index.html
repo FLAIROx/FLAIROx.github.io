@@ -1,0 +1,906 @@
+<!--
+  Copyright 2018 The Distill Template Authors
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!doctype html>
+
+<head>
+  <title>AH2AC2: Ad-Hoc Human-AI Coordination Challenge</title>
+  <meta name="description"
+    content="Web publication for the Ad-Hoc Human-AI Coordination Challenge (AH2AC2) research paper." />
+  <meta property="og:url" content="https://flairox.github.io/ah2ac2/" />
+  <meta property="og:title" content="AH2AC2: Human-AI Coordination Challenge" />
+  <meta property="og:description" content="A new benchmark for evaluating AI agents' ability to coordinate with humans in Hanabi." />
+  <meta property="og:image" content="og-image.png" />
+  <meta property="og:image:url" content="og-image.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="AH2AC2: Human-AI Coordination Challenge" />
+  <meta name="twitter:description" content="A new benchmark for evaluating AI agents' ability to coordinate with humans in Hanabi." />
+  <meta name="twitter:image" content="" />
+  <meta name="twitter:image:secure_url" content="" />
+
+  <script>
+    console.log = function () { };
+    console.groupCollapsed = function () { };
+    console.debug = function () { };
+  </script>
+  <script src="dist/template.v2.js"></script>
+  <link rel="stylesheet" href="dist/bootstrap.forms.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+    crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/p5@1.2.0/lib/p5.js"></script>
+  <script src=https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.10/seedrandom.min.js></script>
+
+  <link rel="stylesheet" href="dist/demo.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf8">
+  <style>
+    /* Clean, minimalistic base styling */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background-color: #ffffff;
+    }
+
+    /* Fix title overflow */
+    d-title h1 {
+      font-size: clamp(1.8rem, 4vw, 3.2rem) !important;
+      line-height: 1.2 !important;
+      word-wrap: break-word !important;
+      hyphens: auto !important;
+      color: #000000 !important;
+    }
+
+    /* Clean announcement box */
+    .highlight-box {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Minimalistic TL;DR section */
+    .tldr-box {
+      background-color: #000000;
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 32px;
+      margin: 32px 0;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .tldr-box h2 {
+      color: #ffffff;
+      margin-top: 0;
+      font-weight: 600;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .tldr-box ul {
+      list-style: none !important;
+      padding-left: 0 !important;
+    }
+
+    .tldr-box li {
+      position: relative;
+      padding-left: 20px !important;
+      margin-bottom: 16px !important;
+      line-height: 1.6 !important;
+      color: #ffffff !important;
+    }
+
+    .tldr-box li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: #ffffff;
+      font-weight: bold;
+    }
+
+    .tldr-box p {
+      color: #ffffff !important;
+    }
+
+    .tldr-box strong {
+      color: #ffffff !important;
+    }
+    
+    /* Clean, professional table styling */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 32px 0;
+      background: #ffffff;
+      border: 1px solid #e1e5e9;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    .results-table th,
+    .results-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e1e5e9;
+    }
+    
+    .results-table th {
+      background-color: #f8f9fa;
+      color: #1a1a1a;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border-bottom: 2px solid #e1e5e9;
+    }
+    
+    .results-table tr:nth-child(even) {
+      background-color: #fafbfc;
+    }
+
+    .results-table tr:hover {
+      background-color: #f1f3f4;
+    }
+
+    .results-table td strong {
+      font-weight: 600;
+    }
+    
+    /* Clean code block */
+    .citation-box {
+      background-color: #f6f8fa;
+      border: 1px solid #d1d9e0;
+      padding: 20px;
+      margin: 32px 0;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      font-size: 0.875rem;
+      color: #24292f;
+      overflow-x: auto;
+    }
+    
+    /* Clean contribution section */
+    .contribution-list {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-left: 4px solid #1a1a1a;
+      border-radius: 0 6px 6px 0;
+      padding: 24px;
+      margin: 32px 0;
+    }
+
+    .contribution-list h3 {
+      margin-top: 0;
+      color: #1a1a1a;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .contribution-list ul {
+      list-style: none !important;
+      padding-left: 0 !important;
+    }
+
+    .contribution-list li {
+      position: relative;
+      padding-left: 20px !important;
+      margin-bottom: 12px !important;
+      color: #1a1a1a;
+      line-height: 1.6 !important;
+    }
+
+    .contribution-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    
+    /* Clean call-to-action */
+    .call-to-action {
+      background-color: #f8f9fa;
+      border: 2px solid #1a1a1a;
+      border-radius: 8px;
+      padding: 32px;
+      margin: 40px 0;
+      text-align: center;
+    }
+
+    .call-to-action h2 {
+      color: #1a1a1a;
+      margin-top: 0;
+      font-weight: 700;
+      font-size: 1.75rem;
+      margin-bottom: 16px;
+    }
+
+    .call-to-action ul {
+      list-style: none !important;
+      padding: 0 !important;
+      margin: 0;
+    }
+
+    .call-to-action li {
+      padding: 8px 0 !important;
+      font-size: 1rem;
+      line-height: 1.6 !important;
+    }
+
+    .call-to-action a {
+      color: #1a1a1a;
+      text-decoration: underline;
+      text-decoration-color: #6b7280;
+    }
+
+    .call-to-action a:hover {
+      text-decoration-color: #1a1a1a;
+    }
+    
+    /* Clean stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 32px 0;
+    }
+    
+    .stat-card {
+      background-color: #ffffff;
+      border: 1px solid #e1e5e9;
+      padding: 24px;
+      border-radius: 6px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+      transition: box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .stat-number {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .stat-card div:last-child {
+      color: #6b7280;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+    
+    .celebration {
+      color: #1a1a1a;
+      font-size: 1.1em;
+    }
+
+    /* Clean section headers */
+    h2 {
+      color: #1a1a1a;
+      font-weight: 700;
+      font-size: 1.875rem;
+      margin-top: 48px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e1e5e9;
+      padding-bottom: 8px;
+    }
+
+    h3 {
+      color: #1a1a1a;
+      font-weight: 600;
+      font-size: 1.25rem;
+      margin-top: 32px;
+      margin-bottom: 16px;
+    }
+
+    /* Clean paragraphs */
+    p {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #374151;
+      margin-bottom: 16px;
+    }
+
+    /* Clean lists */
+    ul {
+      padding-left: 20px !important;
+    }
+
+    ol {
+      padding-left: 20px !important;
+    }
+
+    li {
+      margin-bottom: 8px !important;
+      line-height: 1.6 !important;
+      color: #374151;
+    }
+
+    /* Clean links */
+    a {
+      color: #1a1a1a;
+      text-decoration: underline;
+      text-decoration-color: #d1d5db;
+      transition: text-decoration-color 0.2s ease;
+    }
+
+    a:hover {
+      text-decoration-color: #1a1a1a;
+    }
+
+    /* Data access highlight */
+    .highlight-box.data-access {
+      background-color: #f8f9fa;
+      border-left: 4px solid #1a1a1a;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Clean styling for special table rows */
+    .results-table tr[style*="italic"] {
+      background-color: #f1f3f4 !important;
+      font-style: italic;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+      }
+
+      .stat-number {
+        font-size: 1.875rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      .tldr-box, .call-to-action {
+        padding: 24px;
+      }
+
+      .results-table {
+        font-size: 0.875rem;
+      }
+
+      .results-table th,
+      .results-table td {
+        padding: 8px 12px;
+      }
+    }
+
+    /* Additional clean spacing */
+    .highlight-box p {
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    em {
+      font-style: italic;
+      color: #6b7280;
+    }
+
+    /* Smaller author names and affiliations */
+    d-byline {
+      font-size: 0.875rem;
+    }
+
+    d-byline h3 {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    d-byline p {
+      font-size: 0.8rem;
+    }
+
+    d-byline .authors {
+      font-size: 0.875rem;
+    }
+
+    d-byline .affiliations {
+      font-size: 0.8rem;
+    }
+
+    /* Citation styling to match jaxmarl */
+    d-appendix .citation {
+      font-size: 11px;
+      line-height: 15px;
+      border-left: 1px solid rgba(0, 0, 0, 0.1);
+      padding-left: 18px;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: rgba(0, 0, 0, 0.02);
+      padding: 10px 18px;
+      border-radius: 3px;
+      color: rgba(150, 150, 150, 1);
+      overflow: auto;
+      margin-top: -12px;
+    }
+
+    d-appendix pre {
+      display: block;
+      font-family: monospace;
+      white-space: pre;
+      margin: 1em 0px;
+    }
+  </style>
+  <base target="_blank">
+
+</head>
+
+<body>
+  <d-front-matter>
+    <script id='distill-front-matter' type="text/json">{
+    "title": "Ad-Hoc Human-AI Coordination Challenge (AH2AC2)",
+    "description": "A new benchmark for evaluating AI agents' ability to coordinate with humans in the complex, partially observable, cooperative game Hanabi.",
+    "published": "June 1, 2025",
+    "pubUrl": "TODO",
+    "pubVenue": "arXiv",
+    "authors": [
+      {
+        "author":"Tin Dizdarevic",
+        "authorURL":"https://www.linkedin.com/in/tin-dizdarevic",
+        "affiliations": [
+          {"name": "University of Oxford", "url":"https://foersterlab.com/"}
+        ]
+      },
+      {
+        "author":"Tobias Gessler",
+        "authorURL":"https://www.linkedin.com/in/tobias-gessler/",
+        "affiliations": [
+          {"name": "University of Oxford", "url":"https://foersterlab.com/"}
+        ]
+      },
+      {
+        "author":"Ravi Hammond",
+        "authorURL":"https://ravihammond.com/",
+        "affiliations": [
+          {"name": "University of Oxford", "url":"https://foersterlab.com/"}
+        ]
+      },
+      {
+        "author":"Ani Calinescu",
+        "authorURL":"https://scholar.google.co.uk/citations?user=aCljaCYAAAAJ&hl=en",
+        "affiliations": [
+          {"name": "University of Oxford", "url":"https://foersterlab.com/"}
+        ]
+      },
+      {
+        "author":"Jonathan Cook",
+        "authorURL":"https://scholar.google.com/citations?user=7tcPHHYAAAAJ&hl=en",
+        "affiliations": [
+          {"name": "University of Oxford", "url":"https://foersterlab.com/"}
+        ]
+      },
+      {
+        "author":"Matteo Gallici",
+        "authorURL":"https://mttga.github.io/",
+        "affiliations": [
+          {"name": "Universitat Politècnica de Catalunya", "url":"https://www.upc.edu/en"}
+        ]
+      },
+      {
+        "author":"Andrei Lupu",
+        "authorURL":"https://scholar.google.com/citations?user=I6aB-YUAAAAJ&hl=en",
+        "affiliations": [
+          {"name": "University of Oxford", "url":"https://foersterlab.com/"}
+        ]
+      },
+      {
+        "author":"Jakob Nicolaus Foerster",
+        "authorURL":"https://www.jakobfoerster.com/",
+        "affiliations": [
+          {"name": "University of Oxford", "url":"https://foersterlab.com/"}
+        ]
+      }
+    ],
+    "katex": {
+      "delimiters": [
+        {"left": "$$", "right": "$$", "display": false}
+      ]
+    }
+  }</script>
+  </d-front-matter>
+  
+  <div id='cover'>
+    <div id="cover-video-tint"></div>
+    <d-title id="title">
+    </d-title>
+  </div>
+  <d-byline></d-byline>
+
+  <d-article>
+
+    <div class="tldr-box">
+      <h2>TL;DR</h2>
+      <ul>
+        <li>AH2AC2 is a benchmark for evaluating how well AI agents can coordinate with humans in the complex, partially observable, cooperative game Hanabi, especially when access to human data is limited.</li>
+        <li>We provide the <strong>first open-source dataset</strong> of human gameplay in Hanabi, consisting of 1,858 two-player and 1,221 three-player games.</li>
+        <li>We have developed <strong>high-performing human proxy agents</strong>, trained on a massive dataset (over 100k games), to serve as standardized evaluation partners. These are kept behind an API to ensure evaluation integrity.</li>
+        <li>Our initial baseline evaluations show that <strong>current methods struggle</strong> to effectively use limited human data for coordination, highlighting a significant research gap.</li>
+        <li>We invite the research community to participate, test their methods, and help advance human-AI coordination!</li>
+        <li>Our research paper introducing the <strong>Ad-Hoc Human-AI Coordination Challenge (AH2AC2)</strong> has been accepted to ICML <span class="celebration">🎉</span>!</li>
+      </ul>
+    </div>
+
+    <div class="contribution-list">
+      <h3>Our key contributions include:</h3>
+      <ul>
+        <li>📊 The first open-source Hanabi human gameplay dataset.</li>
+        <li>🤖 Robust human proxy agents for evaluation, developed using a combination of behavioural cloning and regularised reinforcement learning on a large private dataset.</li>
+        <li>🔧 An evaluation protocol with an API for accessing the proxy agents and a public leaderboard to track progress.</li>
+        <li>📈 A set of diverse baselines to kickstart research and provide initial performance benchmarks.</li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; margin: 40px 0;">
+      <img src="dist/img/AH2AC2_Pipeline.png" alt="AH2AC2 Pipeline Overview" style="width: 100%; max-width: 800px; height: auto;" />
+      <p style="text-align: center; margin-top: 16px; color: #6b7280; font-size: 0.9rem; font-style: italic;">
+        Ad-Hoc Human-AI Coordination Challenge (AH2AC2)
+      </p>
+    </div>
+
+    <h2>Ad-Hoc Human-AI Coordination Benchmark</h2>
+
+    <p>
+      As AI becomes more integrated into our daily lives, the ability for AI agents to effectively coordinate with humans is crucial. Traditional AI training methods, like self-play, often lead to agents that are good at playing with themselves but struggle to adapt to human partners.
+    </p>
+
+    <p>
+      Hanabi serves as an excellent testbed for human-AI coordination due to its emphasis on imperfect information, limited communication, theory of mind, and the need for coordinated action to achieve a shared goal. While previous research has explored Hanabi, a lack of standardised benchmarks and open datasets has hindered progress.
+    </p>
+
+    <p>
+      To address these challenges, we introduce the <strong>Ad-Hoc Human-AI Coordination Challenge (AH2AC2)</strong>. AH2AC2 provides a standardized framework for evaluating AI agents' ability to coordinate with human-like partners in Hanabi, particularly focusing on scenarios where only a small amount of human gameplay data is available for training. The goal is to foster the development of AI agents that can effectively <strong>collaborate with humans</strong>.
+    </p>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <img src="dist/img/HumanAICoordination.jpeg" alt="Human-AI Coordination Illustration" style="max-width: 100%; height: auto; max-height: 400px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+    </div>
+
+    <h2>Dataset</h2>
+
+    <p>
+      A core component of AH2AC2 is the release of the <strong>first open-source dataset of human Hanabi gameplay</strong>. This dataset contains 1,858 two-player games and 1,221 three-player games, collected from the hanab.live platform.
+    </p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">1,858</div>
+        <div>Two-Player Games</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">1,221</div>
+        <div>Three-Player Games</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">23.37</div>
+        <div>Average 2P Score</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">23.25</div>
+        <div>Average 3P Score</div>
+      </div>
+    </div>
+
+    <h3>Open-Sourced Data Statistics:</h3>
+
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Setting</th>
+          <th>Metric</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Avg</th>
+          <th>Median</th>
+          <th>Std</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="2"><strong>1,858 Two-Player Games</strong></td>
+          <td>Scores</td>
+          <td>13</td>
+          <td>25</td>
+          <td>23.37</td>
+          <td>24</td>
+          <td>1.86</td>
+        </tr>
+        <tr>
+          <td>Game Lengths</td>
+          <td>52</td>
+          <td>76</td>
+          <td>65.45</td>
+          <td>66</td>
+          <td>3.35</td>
+        </tr>
+        <tr>
+          <td rowspan="2"><strong>1,221 Three-Player Games</strong></td>
+          <td>Scores</td>
+          <td>14</td>
+          <td>25</td>
+          <td>23.25</td>
+          <td>24</td>
+          <td>1.91</td>
+        </tr>
+        <tr>
+          <td>Game Lengths</td>
+          <td>45</td>
+          <td>67</td>
+          <td>57.86</td>
+          <td>58</td>
+          <td>3.38</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      This open-sourced data is a subset of a much larger dataset (over 100,000 two-player games and over 46,000 three-player games) that we used to train our human proxy agents. By releasing only a limited dataset, we aim to encourage research into data-efficient methods for human-AI coordination.
+    </p>
+
+    <div class="highlight-box data-access">
+      <p><strong>Data Access:</strong> Participants can access the open-sourced games to develop their agents. Details on accessing the data can be found on the <a href="#">challenge website (placeholder link)</a>.</p>
+    </div>
+
+    <h2>Evaluation</h2>
+
+    <p>The AH2AC2 evaluation has two main parts:</p>
+    <ol>
+      <li><strong>Coordination with Human Proxies:</strong> Participants develop agents that are then evaluated by playing 1,000 games with our human proxy agents. These proxies are trained on our large, private dataset and are designed to exhibit human-like playstyles.</li>
+      <li><strong>Human Action Prediction (Optional):</strong> Agents are evaluated on their ability to predict human actions in an unseen set of human-played games, measured by cross-entropy loss.</li>
+    </ol>
+
+    <p>To ensure fairness and prevent overfitting to the proxy agents, access to them is controlled.</p>
+
+    <h3>Results</h3>
+
+    <p>We evaluated several baseline methods within the AH2AC2 framework. These include:</p>
+    <ul>
+      <li><strong>IPPO (Independent Proximal Policy Optimization):</strong> Trained via self-play, no human data.</li>
+      <li><strong>BC (Behavioral Cloning):</strong> Trained solely on the open-sourced human data.</li>
+      <li><strong>HDR-IPPO (Human-Data-Regularized IPPO):</strong> Builds on BC by incorporating regularized reinforcement learning.</li>
+      <li><strong>BR-BC (Best Response to BC):</strong> Trains an agent to best respond to a fixed BC policy.</li>
+      <li><strong>OBL (Off-Belief Learning):</strong> SOTA zero-shot coordination method (no human data).</li>
+      <li><strong>OP (Other-Play):</strong> A zero-shot coordination method.</li>
+      <li><strong>FCP (Fictitious Co-Play):</strong> A population-based training method.</li>
+      <li><strong>DeepSeek-R1:</strong> A strong reasoning LLM evaluated without Hanabi-specific fine-tuning, using two prompting variants: basic game state description and enhanced with H-conventions.</li>
+    </ul>
+
+    <h3>Initial AH2AC2 Leaderboard:</h3>
+
+    <h4>Two-Player Results</h4>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Mean</th>
+          <th>Median</th>
+          <th>CE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>OBL (L4)</strong></td>
+          <td><strong>21.04</strong></td>
+          <td>22</td>
+          <td>1.33</td>
+        </tr>
+        <tr>
+          <td>BR-BC</td>
+          <td>19.41</td>
+          <td>20</td>
+          <td>10.82</td>
+        </tr>
+        <tr>
+          <td>FCP</td>
+          <td>14.01</td>
+          <td>16</td>
+          <td>3.52</td>
+        </tr>
+        <tr>
+          <td>OP</td>
+          <td>13.91</td>
+          <td>19</td>
+          <td>7.81</td>
+        </tr>
+        <tr>
+          <td>HDR-IPPO</td>
+          <td>12.76</td>
+          <td>15</td>
+          <td>0.96</td>
+        </tr>
+        <tr>
+          <td>IPPO</td>
+          <td>10.16</td>
+          <td>14</td>
+          <td>12.60</td>
+        </tr>
+        <tr>
+          <td>DeepSeek-R1 H-Group</td>
+          <td>9.91</td>
+          <td>0</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>DeepSeek-R1</td>
+          <td>5.43</td>
+          <td>0</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>BC</td>
+          <td>2.12</td>
+          <td>0</td>
+          <td>0.86</td>
+        </tr>
+        <tr style="font-style: italic;">
+          <td><em>Human Proxies</em> †</td>
+          <td>22.76</td>
+          <td>23</td>
+          <td>0.54</td>
+        </tr>
+        <tr style="font-style: italic;">
+          <td><em>BR-BC*</em> †</td>
+          <td>22.59</td>
+          <td>23</td>
+          <td>5.00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>Three-Player Results</h4>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Mean</th>
+          <th>Median</th>
+          <th>CE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>DeepSeek-R1 H-Group</strong></td>
+          <td><strong>14.62</strong></td>
+          <td>18</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>DeepSeek-R1</td>
+          <td>14.38</td>
+          <td>18</td>
+          <td>-</td>
+        </tr>
+        <tr>
+          <td>HDR-IPPO</td>
+          <td>14.03</td>
+          <td>16</td>
+          <td>0.80</td>
+        </tr>
+        <tr>
+          <td>OP</td>
+          <td>12.87</td>
+          <td>18</td>
+          <td>6.40</td>
+        </tr>
+        <tr>
+          <td>BR-BC</td>
+          <td>11.89</td>
+          <td>12</td>
+          <td>29.89</td>
+        </tr>
+        <tr>
+          <td>FCP</td>
+          <td>11.55</td>
+          <td>6.0</td>
+          <td>5.97</td>
+        </tr>
+        <tr>
+          <td>IPPO</td>
+          <td>6.34</td>
+          <td>0</td>
+          <td>8.60</td>
+        </tr>
+        <tr>
+          <td>BC</td>
+          <td>3.31</td>
+          <td>0</td>
+          <td>0.70</td>
+        </tr>
+        <tr style="font-style: italic;">
+          <td><em>Human Proxies</em> †</td>
+          <td>20.86</td>
+          <td>21</td>
+          <td>0.62</td>
+        </tr>
+        <tr style="font-style: italic;">
+          <td><em>BR-BC*</em> †</td>
+          <td>18.80</td>
+          <td>19</td>
+          <td>7.53</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size: 0.875rem; font-style: italic; color: #6b7280;">† <em>Not constrained by challenge limits (uses full dataset for BC in BR-BC*), acts as a golden standard. We report average performance over two human proxies.</em></p>
+
+    <div class="highlight-box">
+      <p>🔍 Our results underscore a critical research gap: <strong>current methods are not yet sufficient to effectively integrate small human datasets to significantly enhance coordination capabilities.</strong> While DeepSeek-R1 demonstrates foundational capability, particularly in three-player settings where it outperforms traditional baselines, significant improvements are still needed to match human-level coordination.</p>
+    </div>
+
+    <p>
+      <strong>LLM Evaluation Insights:</strong> We evaluated DeepSeek-R1 with two prompting approaches: basic game state description and enhanced prompts including H-conventions. While providing H-conventions substantially improved performance in two-player games (5.43 vs 9.91), the LLM still significantly underperforms compared to OBL. Interestingly, in three-player settings, DeepSeek-R1 achieved the highest scores among all baselines, suggesting some inherent coordination capabilities.
+    </p>
+
+    <h3>Evaluation API</h3>
+
+    <p>
+      To participate and ensure a fair evaluation process, we host the human proxy agents and provide access through a dedicated <strong>Evaluation API</strong>.
+      Participants must register to receive a private key. This key allows a one-time evaluation run (1,000 games) against our human proxies. The API ensures that agents only receive local observations, maintaining the partial observability inherent to Hanabi. After the evaluation, results are automatically published on the challenge leaderboard.
+    </p>
+
+    <div class="call-to-action">
+      <h2>What Now?</h2>
+      <p>We believe AH2AC2 is a significant step towards advancing research in human-AI coordination. We invite you to get involved!</p>
+      
+      <div style="text-align: left; display: inline-block; margin-top: 20px;">
+        <ul>
+          <li>📄 <strong>Read the paper:</strong> <a href="#">TODO</a></li>
+          <li>📊 <strong>Get the data we open source:</strong> <a href="https://huggingface.co/datasets/ah2ac2/datasets">Huggingface</a></li>
+          <li>🏆 <strong>See the up-to-date leaderboard:</strong> <a href="https://ah2ac2.com/">Official Website</a></li>
+          <li>✍️ <strong>Register your interest for participation:</strong> <a href="https://ah2ac2.com/">Official Website</a></li>
+          <li>🔧 <strong>Check out the API docs for evaluating your methods:</strong> <a href="https://docs.ah2ac2.com/">Docs</a></li>
+        </ul>
+      </div>
+    </div>
+
+  </d-article>
+
+  <d-appendix>
+    <h3>Acknowledgements</h3>
+    <p>
+      We would like to thank the contributors and collaborators who made this work possible. We thank the hanab.live community for providing valuable human gameplay data. This project represents a collaborative effort to advance research in human-AI coordination.
+    </p>
+
+    <h3>Citation</h3>
+
+    <p>If you use AH2AC2 or our dataset in your work, please use the following citation:</p>
+    <pre class="citation long">
+      TODO
+    </pre>
+
+  </d-appendix>
+
+</body>
+
+</html> 
