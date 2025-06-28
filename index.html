@@ -46,12 +46,19 @@
         }
         
         .card-hover {
-            transition: all 0.2s ease-out;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            background: linear-gradient(white, white) padding-box, 
+                        linear-gradient(135deg, rgba(0,0,255,0.1), rgba(66,133,244,0.1)) border-box;
         }
         
         .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-4px);
+            border: 2px solid transparent;
+            background: linear-gradient(white, white) padding-box, 
+                        linear-gradient(135deg, #0000ff, #4285f4, #0000ff) border-box;
+            box-shadow: 0 12px 35px -8px rgba(66, 133, 244, 0.3), 
+                        0 0 0 1px rgba(66, 133, 244, 0.1);
         }
         
         .tag {
@@ -71,6 +78,16 @@
             line-height: 1.3;
             display: inline-block;
             padding-bottom: 0.1em;
+        }
+        
+        .continue-reading {
+            color: rgba(66, 133, 244, 0.75);
+            transition: all 0.2s ease;
+        }
+        
+        .continue-reading:hover {
+            color: rgba(66, 133, 244, 1);
+            transform: translateX(2px);
         }
     </style>
 </head>
@@ -111,7 +128,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             <!-- AH2AC2 -->
-            <article class="group bg-white rounded-2xl shadow-soft hover:shadow-soft-lg card-hover border border-gray-200/50 overflow-hidden">
+            <article class="group bg-white rounded-2xl card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-5">
                         <span class="px-3 py-1 bg-violet-50 text-violet-700 text-xs font-medium rounded-lg">Benchmark</span>
@@ -134,7 +151,7 @@
             
             
             <!-- Fixing TD Part II -->
-            <article class="group bg-white rounded-2xl shadow-soft hover:shadow-soft-lg card-hover border border-gray-200/50 overflow-hidden">
+            <article class="group bg-white rounded-2xl card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-5">
                         <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg">Reinforcement Learning</span>
@@ -156,7 +173,7 @@
             </article>
 
             <!-- Fixing TD Part I -->
-            <article class="group bg-white rounded-2xl shadow-soft hover:shadow-soft-lg card-hover border border-gray-200/50 overflow-hidden">
+            <article class="group bg-white rounded-2xl card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-5">
                         <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg">Reinforcement Learning</span>
@@ -177,7 +194,7 @@
             </article>
 
             <!-- PARDEN -->
-            <article class="group bg-white rounded-2xl shadow-soft hover:shadow-soft-lg card-hover border border-gray-200/50 overflow-hidden">
+            <article class="group bg-white rounded-2xl card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-5">
                         <span class="px-3 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-lg">Security</span>
@@ -199,7 +216,7 @@
             </article>
 
             <!-- BLP -->
-            <article class="group bg-white rounded-2xl shadow-soft hover:shadow-soft-lg card-hover border border-gray-200/50 overflow-hidden">
+            <article class="group bg-white rounded-2xl card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-5">
                         <span class="px-3 py-1 bg-orange-50 text-orange-700 text-xs font-medium rounded-lg">Environment Design</span>
@@ -221,7 +238,7 @@
             </article>
 
             <!-- JaxMARL -->
-            <article class="group bg-white rounded-2xl shadow-soft hover:shadow-soft-lg card-hover border border-gray-200/50 overflow-hidden">
+            <article class="group bg-white rounded-2xl card-hover overflow-hidden">
                 <div class="p-6">
                     <div class="flex justify-between items-start mb-5">
                         <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-lg">Multi-Agent</span>
